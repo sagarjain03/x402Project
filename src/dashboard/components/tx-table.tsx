@@ -225,7 +225,7 @@ export function TxTable({
                       </span>
                     </TableCell>
 
-                    <TableCell className="py-3.5 px-5 max-w-[260px]">
+                    <TableCell className="py-3.5 px-5 max-w-[260px] overflow-hidden truncate">
                       {isAllow ? (
                         <span className="text-xs text-gray-500 font-mono">Policy compliant</span>
                       ) : primaryReason ? (

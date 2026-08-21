@@ -258,8 +258,8 @@ export function FundFlow({
 
             <div className="flex w-full flex-col items-center justify-center gap-1 sm:w-auto sm:min-w-[150px]">
               <span className="font-mono text-lg font-extrabold text-emerald-600">${movedUsd}</span>
-              <div className="relative h-px w-full min-w-[110px] bg-gradient-to-r from-slate-200 via-emerald-400 to-slate-200">
-                <ArrowRight className="absolute -right-1 -top-2 h-4 w-4 text-emerald-500" />
+              <div className="relative h-px w-full min-w-[110px] bg-gradient-to-r from-slate-200 via-emerald-400 to-slate-200 flex items-center">
+                <ArrowRight className="absolute -right-1.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
               </div>
               <span className="font-mono text-xs text-slate-400">
                 {transfers.length} settled {transfers.length === 1 ? "transfer" : "transfers"}

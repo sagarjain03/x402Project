@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { MockProvider } from "@/dashboard/mock/MockProvider";
-import { env } from "@/shared/env";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col">
-        <MockProvider enabled={env.USE_MOCKS}>{children}</MockProvider>
+        {children}
       </body>
     </html>
   );

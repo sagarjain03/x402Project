@@ -148,7 +148,20 @@ export function FundFlow({
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const loadBalances = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      setError(null);
+      const next = await apiGet<BalancesResponse>(API.walletBalances);
+      setBalances(next);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not read wallet balances.");
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+  const handleManualRefresh = useCallback(async () => {
     try {
       setRefreshing(true);
       setError(null);
@@ -162,10 +175,9 @@ export function FundFlow({
   }, [onRefresh]);
 
   useEffect(() => {
-    // Kicked off in a microtask: the loader sets state before its first await, and doing that
-    // synchronously inside an effect updates state mid-commit.
-    void Promise.resolve().then(load);
-  }, [load]);
+    // Initial mount fetches only wallet balances without triggering parent re-fetch cascade
+    void Promise.resolve().then(loadBalances);
+  }, [loadBalances]);
 
   // Only a payment that reached the chain moved money. A row with no transaction id was approved
   // and then never settled, and drawing an arrow for it would claim funds that never left.
@@ -201,9 +213,9 @@ export function FundFlow({
           )}
           <button
             type="button"
-            onClick={load}
+            onClick={handleManualRefresh}
             disabled={refreshing}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 disabled:opacity-60 cursor-pointer"
           >
             <RefreshCw className={`h-3.5 w-3.5 text-slate-500 ${refreshing ? "animate-spin" : ""}`} />
             Refresh

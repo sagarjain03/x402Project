@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { apiGet } from "@/dashboard/api-client/client";
+import { apiGet, apiPost } from "@/dashboard/api-client/client";
 import { API } from "@/dashboard/api-client/endpoints";
 import { BudgetGauge } from "@/dashboard/components/budget-gauge";
 import { VelocityMeter } from "@/dashboard/components/velocity-meter";
@@ -23,6 +23,7 @@ import {
   Check,
   FileText,
   Lock,
+  Sliders,
 } from "lucide-react";
 
 /** CORE groups this by window — see src/core/handlers/budgets.ts. */
@@ -92,6 +93,25 @@ export function AgentDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [togglingFreeze, setTogglingFreeze] = useState(false);
+
+  const handleToggleFreeze = async () => {
+    if (!agent) return;
+    try {
+      setTogglingFreeze(true);
+      if (agent.status === "FROZEN") {
+        await apiPost(API.unfreeze(agent.id), {});
+        setAgent((prev) => (prev ? { ...prev, status: "ACTIVE", frozenReason: undefined } : null));
+      } else {
+        await apiPost(API.freeze(agent.id), { reason: "Operator dashboard manual freeze" });
+        setAgent((prev) => (prev ? { ...prev, status: "FROZEN", frozenReason: "Operator dashboard manual freeze" } : null));
+      }
+    } catch (err) {
+      console.error("[AgentDetail] Failed to toggle freeze:", err);
+    } finally {
+      setTogglingFreeze(false);
+    }
+  };
 
   useEffect(() => {
     async function loadAgentDetail() {
@@ -102,14 +122,14 @@ export function AgentDetailPage() {
         // and `wallet`. Assigning either envelope directly leaves every field undefined.
         const [agentData, budgetData, history] = await Promise.all([
           apiGet<{ agent: AgentRow; policy?: { version: number } }>(API.agent(agentId)),
-          apiGet<BudgetResponse>(API.budgets(agentId)),
+          apiGet<BudgetResponse>(API.budgets(agentId)).catch(() => null),
           apiGet<{ transactions: TransactionRow[] }>(
             `${API.transactions}?agentId=${agentId}&limit=200`,
           ).catch(() => null),
         ]);
         setAgent(toAgentItem(agentData.agent, agentData.policy?.version ?? 0));
         setWalletNetwork(agentData.agent.wallet?.network ?? null);
-        setBudget(toFlatBudget(budgetData));
+        setBudget(budgetData ? toFlatBudget(budgetData) : null);
 
         // Cumulative spend, oldest first, counting only payments that actually reached the chain.
         // Cents as integers: a running total of decimal strings drifts within a dozen rows.
@@ -225,7 +245,37 @@ export function AgentDetailPage() {
           <p className="text-xs text-zinc-500">{agent.description}</p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            href={`/policies/${agent.id}`}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-2 rounded-lg shadow-sm transition-colors"
+          >
+            <Sliders className="h-3.5 w-3.5 text-blue-600" />
+            <span>Active Policy {agent.activePolicyVersion > 0 ? `v${agent.activePolicyVersion}` : "(None)"}</span>
+          </Link>
+
+          <button
+            onClick={handleToggleFreeze}
+            disabled={togglingFreeze}
+            className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition-colors border ${
+              isFrozen
+                ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200"
+                : "bg-rose-50 text-rose-700 hover:bg-rose-100 border-rose-200"
+            }`}
+          >
+            {isFrozen ? (
+              <>
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                <span>{togglingFreeze ? "Unfreezing..." : "Unfreeze Agent"}</span>
+              </>
+            ) : (
+              <>
+                <ShieldAlert className="h-3.5 w-3.5 text-rose-600" />
+                <span>{togglingFreeze ? "Freezing..." : "Freeze Agent"}</span>
+              </>
+            )}
+          </button>
+
           <button
             onClick={handleCopyWallet}
             className="inline-flex items-center gap-1.5 text-xs font-mono text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 px-3 py-2 rounded-lg shadow-sm transition-colors"
@@ -276,7 +326,7 @@ export function AgentDetailPage() {
           <BudgetGauge
             label="Hourly Budget Window"
             spent={budget?.hourSpentUsd || "0.08"}
-            budget={budget?.hourlyBudgetUsd || "1.00"}
+            budget={budget?.hourlyBudgetUsd ?? "0.00"}
             reserved={budget?.reservedUsd || "0.00"}
           />
           <BudgetGauge
@@ -308,7 +358,7 @@ export function AgentDetailPage() {
               Allowance Cap Remaining
             </span>
             <span className="font-mono font-bold text-zinc-900">
-              ${budget?.walletAllowanceRemainingUsd || "23.65"} / ${agent.walletAllowanceCapUsd}
+              {budget ? `$${budget.walletAllowanceRemainingUsd}` : "—"} / ${agent.walletAllowanceCapUsd}
             </span>
           </div>
           <div className="h-2.5 w-full bg-zinc-100 rounded-full overflow-hidden">

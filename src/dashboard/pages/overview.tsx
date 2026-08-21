@@ -7,6 +7,7 @@ import { API } from "@/dashboard/api-client/endpoints";
 import { Hero } from "@/dashboard/components/ui/Hero";
 import { CloudShader } from "@/dashboard/components/ui/cloud-shader";
 import { DecisionFeed } from "@/dashboard/components/decision-feed";
+import { ErrorCard } from "@/dashboard/components/error-card";
 import {
   DollarSign,
   ShieldBan,
@@ -33,7 +34,7 @@ interface MetricsSummary {
 
 const HUMAN_REASONS: Record<string, string> = {
   ABSOLUTE_BLOCK_THRESHOLD: "Exceeded absolute limit / prompt injection",
-  PER_TRANSACTION_LIMIT_EXCEEDED: "Exceeded per-transaction limit ($0.10)",
+  PER_TRANSACTION_LIMIT_EXCEEDED: "Exceeded per-transaction limit",
   MERCHANT_NOT_ALLOWLISTED: "Merchant domain not on allowlist",
   MERCHANT_BLOCKED: "Merchant domain is explicitly blocked",
   RECIPIENT_MISMATCH: "Recipient address mismatch (pinned recipient)",
@@ -154,7 +155,7 @@ export function OverviewPage() {
     async function loadMetrics() {
       try {
         setLoading(true);
-        const data = await apiGet<MetricsSummary>(API.metrics);
+        const data = await apiGet<MetricsSummary>(`${API.metrics}?window=720`);
         if (data) {
           setMetrics(data);
         }
@@ -214,7 +215,7 @@ export function OverviewPage() {
                 Overview
               </h2>
               <p className="text-sm text-slate-500 mt-1">
-                Real-time policy guard decisions and on-chain prevention metrics for the last 24h.
+                Policy guard decisions and on-chain prevention metrics over the last 30 days.
               </p>
             </div>
 
@@ -231,10 +232,19 @@ export function OverviewPage() {
                 </div>
               </div>
             ) : error && !metrics ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-700">
-                <p className="font-semibold">Unable to load dashboard overview</p>
-                <p className="text-sm mt-1 text-rose-600">{error || "No data received"}</p>
-              </div>
+              <ErrorCard
+                title="Overview Metrics Unavailable"
+                message={error || "Failed to communicate with the policy engine metrics endpoint."}
+                onRetry={() => {
+                  setLoading(true);
+                  apiGet<MetricsSummary>(`${API.metrics}?window=720`)
+                    .then((data) => {
+                      if (data) setMetrics(data);
+                    })
+                    .catch((err) => setError(err instanceof Error ? err.message : "Error"))
+                    .finally(() => setLoading(false));
+                }}
+              />
             ) : (
               <>
                 {/* ========================================================================= */}
@@ -250,7 +260,7 @@ export function OverviewPage() {
                           <DollarSign className="h-4 w-4" />
                         </div>
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                          Spend Today
+                          Spend Settled
                         </span>
                       </div>
 
@@ -261,35 +271,11 @@ export function OverviewPage() {
                         </div>
                         <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
                           <span className="text-emerald-600 font-bold">
-                            {metrics?.onChainTxCount ?? 30} payments
+                            {metrics?.onChainTxCount ?? 0} payments
                           </span>{" "}
                           settled on-chain
                         </p>
                       </div>
-                    </div>
-
-                    {/* Blue Wave Sparkline SVG */}
-                    <div className="mt-4 -mx-5 -mb-5 h-12 w-[calc(100%+40px)] overflow-hidden pointer-events-none opacity-85">
-                      <svg viewBox="0 0 300 60" className="w-full h-full" preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient id="blue-grad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
-                            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
-                          </linearGradient>
-                        </defs>
-                        <path
-                          d="M 0,45 C 50,55 90,30 140,40 C 190,50 240,15 300,20 L 300,60 L 0,60 Z"
-                          fill="url(#blue-grad)"
-                        />
-                        <path
-                          d="M 0,45 C 50,55 90,30 140,40 C 190,50 240,15 300,20"
-                          fill="none"
-                          stroke="#3b82f6"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                        />
-                        <circle cx="300" cy="20" r="3.5" fill="#3b82f6" />
-                      </svg>
                     </div>
                   </div>
 
@@ -324,32 +310,6 @@ export function OverviewPage() {
                         </p>
                       </div>
                     </div>
-
-                    {/* Red Wave Sparkline SVG with Glowing Dot */}
-                    <div className="relative z-10 mt-4 -mx-5 -mb-5 h-12 w-[calc(100%+40px)] overflow-hidden pointer-events-none">
-                      <svg viewBox="0 0 300 60" className="w-full h-full" preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient id="red-grad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.3" />
-                            <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.0" />
-                          </linearGradient>
-                        </defs>
-                        <path
-                          d="M 0,50 C 40,40 80,55 120,48 C 170,40 210,52 260,35 C 275,30 285,25 292,20 L 292,60 L 0,60 Z"
-                          fill="url(#red-grad)"
-                        />
-                        <path
-                          d="M 0,50 C 40,40 80,55 120,48 C 170,40 210,52 260,35 C 275,30 285,25 292,20"
-                          fill="none"
-                          stroke="#f43f5e"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                        />
-                        {/* Illuminated Red Tip */}
-                        <circle cx="292" cy="20" r="4.5" fill="#f43f5e" />
-                        <circle cx="292" cy="20" r="7" fill="#f43f5e" opacity="0.4" />
-                      </svg>
-                    </div>
                   </div>
 
                   {/* 3. Blocked On-Chain Count */}
@@ -361,7 +321,7 @@ export function OverviewPage() {
                           <ShieldCheck className="h-4 w-4" />
                         </div>
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                          Blocked On-Chain
+                          Blocked, Yet On-Chain
                         </span>
                       </div>
 
@@ -371,33 +331,9 @@ export function OverviewPage() {
                           {metrics?.blockedOnChainTxCount ?? 0}
                         </div>
                         <p className="text-xs text-emerald-600 font-semibold mt-1">
-                          0 gas spent on blocked calls (Zero-Gas)
+                          No blocked transactions submitted to chain
                         </p>
                       </div>
-                    </div>
-
-                    {/* Emerald Wave Sparkline SVG */}
-                    <div className="mt-4 -mx-5 -mb-5 h-12 w-[calc(100%+40px)] overflow-hidden pointer-events-none opacity-85">
-                      <svg viewBox="0 0 300 60" className="w-full h-full" preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient id="emerald-grad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
-                            <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-                          </linearGradient>
-                        </defs>
-                        <path
-                          d="M 0,55 C 60,55 100,45 150,48 C 200,52 240,25 300,30 L 300,60 L 0,60 Z"
-                          fill="url(#emerald-grad)"
-                        />
-                        <path
-                          d="M 0,55 C 60,55 100,45 150,48 C 200,52 240,25 300,30"
-                          fill="none"
-                          stroke="#10b981"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                        />
-                        <circle cx="300" cy="30" r="3.5" fill="#10b981" />
-                      </svg>
                     </div>
                   </div>
 
@@ -417,36 +353,14 @@ export function OverviewPage() {
                       {/* Number */}
                       <div>
                         <div className="text-3xl sm:text-[34px] font-extrabold text-slate-900 tracking-tight font-sans">
-                          {metrics?.p95GuardLatencyMs ?? 24} ms
+                          {metrics?.p95GuardLatencyMs !== undefined && metrics?.p95GuardLatencyMs !== null
+                            ? `${metrics.p95GuardLatencyMs} ms`
+                            : "—"}
                         </div>
                         <p className="text-xs text-slate-500 mt-1">
-                          Sub-millisecond pure function eval
+                          P95 end-to-end evaluation latency
                         </p>
                       </div>
-                    </div>
-
-                    {/* Amber Wave Sparkline SVG */}
-                    <div className="mt-4 -mx-5 -mb-5 h-12 w-[calc(100%+40px)] overflow-hidden pointer-events-none opacity-85">
-                      <svg viewBox="0 0 300 60" className="w-full h-full" preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient id="amber-grad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25" />
-                            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.0" />
-                          </linearGradient>
-                        </defs>
-                        <path
-                          d="M 0,50 C 50,50 110,42 160,45 C 210,48 240,20 290,22 L 290,60 L 0,60 Z"
-                          fill="url(#amber-grad)"
-                        />
-                        <path
-                          d="M 0,50 C 50,50 110,42 160,45 C 210,48 240,20 290,22"
-                          fill="none"
-                          stroke="#f59e0b"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                        />
-                        <circle cx="290" cy="22" r="3.5" fill="#f59e0b" />
-                      </svg>
                     </div>
                   </div>
                 </div>
@@ -460,7 +374,7 @@ export function OverviewPage() {
                     {/* Header */}
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold text-xs text-slate-900 uppercase tracking-wider font-sans">
-                        Decision Distribution ({metrics?.windowHours ?? 24}H)
+                        Decision Distribution ({metrics ? Math.round(metrics.windowHours / 24) : "—"}D)
                       </h3>
                       <span className="text-xs font-semibold text-slate-500">
                         Total: {totalDecisions}
@@ -550,7 +464,7 @@ export function OverviewPage() {
                     {/* Header */}
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold text-xs text-slate-900 uppercase tracking-wider font-sans">
-                        Top Blocked Rules ({metrics?.windowHours ?? 24}H)
+                        Top Blocked Rules ({metrics ? Math.round(metrics.windowHours / 24) : "—"}D)
                       </h3>
                       <span className="text-xs text-slate-400">Ranked by frequency</span>
                     </div>

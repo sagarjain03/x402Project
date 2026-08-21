@@ -155,6 +155,7 @@ export interface Policy {
   version: number;
   isActive: boolean;
   rules: PolicyRules;
+  createdByEmail?: string | null;
   createdAt: Date;
 }
 

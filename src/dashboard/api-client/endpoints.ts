@@ -8,6 +8,7 @@ export const API = {
   agents: "/api/v1/agents",
   agent: (id: string) => `/api/v1/agents/${id}`,
   freeze: (id: string) => `/api/v1/agents/${id}/freeze`,
+  unfreeze: (id: string) => `/api/v1/agents/${id}/unfreeze`,
   policies: "/api/v1/policies",
   policy: (agentId: string) => `/api/v1/policies/${agentId}`,
   policyVersions: (agentId: string) => `/api/v1/policies/${agentId}/versions`,

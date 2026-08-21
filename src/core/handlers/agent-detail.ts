@@ -5,13 +5,18 @@ import { getDb, schema } from "@/core/db";
 import { eq } from "drizzle-orm";
 import { handle, parseBody, requireAdmin } from "@/core/handlers/guards";
 import { toAgentDto, toPolicyDto } from "@/core/handlers/serialize";
+import { isAddress } from "@/shared/address";
 import { fail, ok } from "@/shared/http";
 import { toUsd } from "@/shared/money";
 
 const patchSchema = z.object({
   name: z.string().min(1).max(120).optional(),
   description: z.string().max(500).nullable().optional(),
-  walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/).nullable().optional(),
+  walletAddress: z
+    .string()
+    .refine(isAddress, "walletAddress is not a recognised wallet address")
+    .nullable()
+    .optional(),
 });
 
 export const GET = async (

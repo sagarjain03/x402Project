@@ -13,18 +13,17 @@ export function BudgetGauge({
   label?: string;
 }) {
   const spentNum = parseFloat(spent) || 0;
-  const budgetNum = parseFloat(budget) || 1;
+  const budgetNum = parseFloat(budget) || 0;
   const reservedNum = parseFloat(reserved) || 0;
 
-  const spentPercent = Math.min(100, Math.round((spentNum / budgetNum) * 100));
-  const reservedPercent = Math.min(
-    100 - spentPercent,
-    Math.round((reservedNum / budgetNum) * 100)
-  );
+  const spentPercent = budgetNum > 0 ? Math.min(100, Math.round((spentNum / budgetNum) * 100)) : 0;
+  const reservedPercent = budgetNum > 0
+    ? Math.min(100 - spentPercent, Math.round((reservedNum / budgetNum) * 100))
+    : 0;
 
   const totalUtilized = spentPercent + reservedPercent;
-  const isExhausted = totalUtilized >= 100;
-  const isWarning = totalUtilized >= 75 && !isExhausted;
+  const isExhausted = budgetNum > 0 && totalUtilized >= 100;
+  const isWarning = budgetNum > 0 && totalUtilized >= 75 && !isExhausted;
 
   return (
     <div className="space-y-2 bg-white rounded-xl border border-zinc-200 p-4 shadow-sm">

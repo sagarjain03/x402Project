@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { apiGet, apiPost } from "@/dashboard/api-client/client";
 import { API } from "@/dashboard/api-client/endpoints";
 import { explorerTxUrl, explorerName } from "@/shared/explorer";
+import { ERROR_CODES, type ErrorCode } from "@/shared/errors";
 import {
   Bot,
   Brain,
@@ -17,7 +18,16 @@ import {
   Square,
   Syringe,
   UserCheck,
+  Zap,
 } from "lucide-react";
+
+function humanErrorMessage(code?: string): string | null {
+  if (!code) return null;
+  if (code in ERROR_CODES) {
+    return ERROR_CODES[code as ErrorCode].message;
+  }
+  return code;
+}
 
 /**
  * OWNER: UI · The Agent Console.
@@ -264,6 +274,14 @@ export function ConsolePage() {
         </p>
       </header>
 
+      {/* Above-the-fold Live Enforcement Counters */}
+      <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Stat label="Settled Spend" value={`$${spentUsd}`} tone="text-emerald-700" icon={<CircleDollarSign className="h-4 w-4" />} />
+        <Stat label="Money Refused" value={`$${blockedUsd}`} tone="text-red-700" icon={<ShieldAlert className="h-4 w-4" />} />
+        <Stat label="Held in Review" value={`$${heldUsd}`} tone="text-amber-700" icon={<Clock className="h-4 w-4" />} />
+        <Stat label="Decisions" value={`${settled} allow · ${held} hold · ${blocked} block`} tone="text-slate-700" icon={<CheckCircle2 className="h-4 w-4" />} />
+      </dl>
+
       {/* ---------------------------------------------------------------- controls */}
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4">
         {!guardKey && (
@@ -472,7 +490,14 @@ function GuardRow({ call, onApprove, approving }: { call: CallRow; onApprove: (i
         <span className="ml-auto font-mono text-sm">${call.priceUsd}</span>
       </div>
 
-      {call.code && <p className="mt-1 font-mono text-xs opacity-80">{call.code}</p>}
+      {call.code && (
+        <div className="mt-1 space-y-0.5">
+          <p className="font-mono text-xs font-semibold opacity-90">{call.code}</p>
+          {humanErrorMessage(call.code) && (
+            <p className="text-[11px] opacity-80">{humanErrorMessage(call.code)}</p>
+          )}
+        </div>
+      )}
 
       {call.intentId && (
         <a href={`/transactions/${call.intentId}`} className="mt-1 block text-xs underline underline-offset-2 opacity-80 hover:opacity-100">

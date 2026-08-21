@@ -9,6 +9,10 @@ import { DecisionBar, type DecisionMixRow } from "@/dashboard/charts/decision-ba
 import { BudgetBars, type BudgetBarRow } from "@/dashboard/charts/budget-bars";
 import type { TransactionRow } from "@/dashboard/hooks/useLiveDecisions";
 import { Bot, Coins, Plus, ShieldAlert, ShieldCheck, TrendingDown, Zap } from "lucide-react";
+import { Card } from "@/dashboard/components/ui/card";
+import { Button } from "@/dashboard/components/ui/button";
+import { Alert, AlertDescription } from "@/dashboard/components/ui/alert";
+import { Progress } from "@/dashboard/components/ui/progress";
 
 interface AgentsApiResponse {
   agents: AgentRow[];
@@ -49,7 +53,7 @@ function Stat({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[22px] border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:shadow-sm">
+    <Card className="rounded-[22px] p-5 shadow-xs transition-all hover:shadow-sm">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
         {icon}
@@ -58,7 +62,7 @@ function Stat({
         {value}
       </div>
       <p className="mt-1 text-xs text-slate-400">{hint}</p>
-    </div>
+    </Card>
   );
 }
 
@@ -177,12 +181,12 @@ export function AgentsListPage() {
             Everything below is read from the guard&apos;s records.
           </p>
         </div>
-        <button
+        <Button
           onClick={() => setCreating(true)}
-          className="ml-auto inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          className="ml-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold gap-2"
         >
           <Plus className="h-4 w-4" /> Register agent
-        </button>
+        </Button>
       </div>
 
       {creating && (
@@ -228,9 +232,9 @@ export function AgentsListPage() {
       </div>
 
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-          {error}
-        </div>
+        <Alert variant="destructive" className="p-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -238,7 +242,7 @@ export function AgentsListPage() {
           ? [...Array(2)].map((_, i) => (
               <div key={i} className="h-64 animate-pulse rounded-[22px] bg-slate-100" />
             ))
-          : agents.map((agent) => <AgentCard key={agent.id} agent={agent} />)}
+          : agents.map((agent) => <AgentCard key={agent.id} agent={agent} onStatusChange={load} />)}
       </div>
 
       <BudgetBars data={budgetRows} />
@@ -247,7 +251,7 @@ export function AgentsListPage() {
 
       {/* Velocity headroom — the other ceiling the engine enforces, and the one no chart showed */}
       {velocity.length > 0 && (
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <Card className="p-5 shadow-sm">
           <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-900">
             Velocity headroom (last hour)
           </h3>
@@ -268,19 +272,17 @@ export function AgentsListPage() {
                       {row.lastHour} / {row.maxPerHour}
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100">
-                    <div
-                      className={`h-full ${
-                        percent >= 100 ? "bg-rose-500" : percent >= 80 ? "bg-amber-500" : "bg-emerald-500"
-                      }`}
-                      style={{ width: `${percent}%` }}
-                    />
-                  </div>
+                  <Progress
+                    value={percent}
+                    indicatorClassName={
+                      percent >= 100 ? "bg-rose-500" : percent >= 80 ? "bg-amber-500" : "bg-emerald-500"
+                    }
+                  />
                 </li>
               );
             })}
           </ul>
-        </div>
+        </Card>
       )}
     </div>
   );

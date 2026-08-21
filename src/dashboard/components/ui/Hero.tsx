@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { CloudShader } from "./cloud-shader";
 
 export type HeroProps = {
@@ -16,19 +15,6 @@ export function Hero({
   subtitle = "Deterministic policy enforcement and a cryptographic audit trail for autonomous agent spend.",
   withShader = false,
 }: HeroProps) {
-  const pathname = usePathname();
-
-  const navItems = [
-    { href: "/transactions", label: "Transactions" },
-    { href: "/console", label: "Console" },
-    { href: "/approvals", label: "Approvals" },
-    { href: "/agents", label: "Agents", hideOnMobile: true },
-    { href: "/audit", label: "Audit Log" },
-    { href: "/simulator", label: "Attack Drills" },
-  ];
-
-  const isActiveNav = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
-
   const scrollToOverview = () => {
     const el = document.getElementById("overview-section");
     if (el) {
@@ -37,34 +23,7 @@ export function Hero({
   };
 
   const content = (
-    <div className="relative z-20 flex flex-col justify-between min-h-[75vh] w-full">
-      <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-white group cursor-pointer">
-          <span className="font-black text-2xl tracking-tight text-white uppercase group-hover:text-slate-200 transition-colors">
-            WARDEN
-          </span>
-        </Link>
-
-        <nav className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-semibold text-white/90">
-          {navItems.map((item) => {
-            const isActive = isActiveNav(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={`transition-all py-1.5 px-3 rounded-lg ${
-                  isActive
-                    ? "bg-slate-900 text-white font-bold backdrop-blur-xs shadow-xs"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
-                } ${item.hideOnMobile ? "hidden sm:inline-block" : ""}`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-      </header>
+    <div className="relative z-20 flex flex-col justify-between min-h-[60vh] w-full pt-8 sm:pt-12">
 
       <div className="flex-1 flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-14 px-6 sm:px-12 md:px-16 text-left max-w-7xl mx-auto w-full py-8 sm:py-12 -mt-4 sm:-mt-8">
         <div className="flex-1 flex flex-col items-start justify-center max-w-2xl">

@@ -220,7 +220,7 @@ export function TxTable({
                     <TableCell className="py-3.5 px-5 whitespace-nowrap">
                       {/* Bare agent name: Bot icon + plain text, no pill */}
                       <span className="inline-flex items-center gap-1.5">
-                        <Bot className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                        <Bot className="h-3.5 w-3.5 text-slate-500 shrink-0" />
                         <span className="text-xs text-gray-600 font-medium">{t.agentName || t.agentId}</span>
                       </span>
                     </TableCell>
@@ -276,9 +276,9 @@ export function TxTable({
                 variant={currentPage === page ? "default" : "outline"}
                 size="icon"
                 onClick={() => setCurrentPage(page)}
-                className={`h-8 w-8 rounded-lg text-xs font-semibold ${
+                className={`h-8 w-8 rounded-lg text-xs font-semibold cursor-pointer ${
                   currentPage === page
-                    ? "bg-blue-600 text-white font-bold shadow-xs"
+                    ? "bg-slate-900 text-white font-bold shadow-xs hover:bg-slate-800"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
               >

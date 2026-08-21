@@ -207,7 +207,7 @@ export function OverviewPage() {
           id="overview-section"
           className="relative z-20 -mt-6 px-3 sm:px-6 lg:px-8 pb-28 max-w-[1400px] w-full mx-auto"
         >
-          <div className="bg-white/95 backdrop-blur-xl rounded-[28px] border border-white/80 shadow-2xl p-6 sm:p-10 space-y-8 min-h-[700px]">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl border border-white/80 shadow-2xl p-6 sm:p-10 space-y-8 min-h-[700px]">
             {/* Top Bar inside Card (Title + Subtitle, No buttons) */}
             <div className="pb-2">
               <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-sans">
@@ -242,14 +242,14 @@ export function OverviewPage() {
                 {/* ========================================================================= */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                   {/* 1. Spend Today */}
-                  <div className="bg-white rounded-[22px] border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
                     <div className="space-y-3">
                       {/* Header Eyebrow + Icon */}
                       <div className="flex items-center gap-2.5">
                         <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
                           <DollarSign className="h-4 w-4" />
                         </div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <span className="text-xs font-semibold tracking-wide text-slate-600">
                           Spend Today
                         </span>
                       </div>
@@ -294,22 +294,22 @@ export function OverviewPage() {
                   </div>
 
                   {/* 2. Money Refused (STAR PRODUCT TILE - DARK NAVY/BLACK WITH RED GLOW) */}
-                  <div className="bg-[#0f1424] rounded-[22px] border border-rose-950/60 p-5 shadow-lg relative overflow-hidden flex flex-col justify-between text-white group">
+                  <div className="bg-[#0f1424] rounded-2xl border border-rose-950/60 p-5 shadow-lg relative overflow-hidden flex flex-col justify-between text-white group">
                     {/* Crimson Ambient Glow */}
                     <div className="absolute right-0 top-0 translate-x-6 -translate-y-6 h-36 w-36 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
 
                     <div className="relative z-10 space-y-3">
                       {/* Header Eyebrow + Badge */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-2.5 min-w-0">
                           <div className="h-7 w-7 rounded-lg bg-rose-950/80 border border-rose-800/40 text-rose-400 flex items-center justify-center">
                             <ShieldBan className="h-4 w-4" />
                           </div>
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-rose-200/90">
+                          <span className="text-xs font-semibold tracking-wide text-rose-200">
                             Money Refused
                           </span>
                         </div>
-                        <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-200 border border-rose-500/30 font-bold">
                           Protected
                         </span>
                       </div>
@@ -319,7 +319,7 @@ export function OverviewPage() {
                         <div className="text-3xl sm:text-[34px] font-extrabold text-white tracking-tight font-sans">
                           ${metrics?.blockedUsd ?? "0.00"}
                         </div>
-                        <p className="text-xs text-rose-200/70 mt-1 flex items-center gap-1">
+                        <p className="text-xs text-rose-200 mt-1 flex items-center gap-1">
                           Unauthorized spend intercepted before blockchain
                         </p>
                       </div>
@@ -353,15 +353,15 @@ export function OverviewPage() {
                   </div>
 
                   {/* 3. Blocked On-Chain Count */}
-                  <div className="bg-white rounded-[22px] border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
                     <div className="space-y-3">
                       {/* Header Eyebrow + Icon */}
                       <div className="flex items-center gap-2.5">
                         <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                           <ShieldCheck className="h-4 w-4" />
                         </div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                          Blocked On-Chain
+                        <span className="text-xs font-semibold tracking-wide text-slate-600">
+                          Blocked on-chain
                         </span>
                       </div>
 
@@ -402,14 +402,14 @@ export function OverviewPage() {
                   </div>
 
                   {/* 4. Engine Latency (P95) */}
-                  <div className="bg-white rounded-[22px] border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
                     <div className="space-y-3">
                       {/* Header Eyebrow + Icon */}
                       <div className="flex items-center gap-2.5">
                         <div className="h-7 w-7 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center">
                           <Zap className="h-4 w-4" />
                         </div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <span className="text-xs font-semibold tracking-wide text-slate-600">
                           Engine Latency (P95)
                         </span>
                       </div>
@@ -456,11 +456,11 @@ export function OverviewPage() {
                 {/* ========================================================================= */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Left: Decision Distribution Card with Donut Chart */}
-                  <div className="bg-white rounded-[24px] border border-slate-200/90 p-7 shadow-xs space-y-6 flex flex-col justify-between">
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-7 shadow-xs space-y-6 flex flex-col justify-between">
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-xs text-slate-900 uppercase tracking-wider font-sans">
-                        Decision Distribution ({metrics?.windowHours ?? 24}H)
+                      <h3 className="font-bold text-sm text-slate-900 tracking-wide font-sans">
+                        Decision distribution ({metrics?.windowHours ?? 24}h)
                       </h3>
                       <span className="text-xs font-semibold text-slate-500">
                         Total: {totalDecisions}
@@ -546,41 +546,49 @@ export function OverviewPage() {
                   </div>
 
                   {/* Right: Top Blocked Rules Card */}
-                  <div className="bg-white rounded-[24px] border border-slate-200/90 p-7 shadow-xs space-y-4 flex flex-col justify-between">
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-7 shadow-xs space-y-4 flex flex-col justify-between">
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-xs text-slate-900 uppercase tracking-wider font-sans">
-                        Top Blocked Rules ({metrics?.windowHours ?? 24}H)
+                      <h3 className="font-bold text-sm text-slate-900 tracking-wide font-sans">
+                        Top blocked rules ({metrics?.windowHours ?? 24}h)
                       </h3>
-                      <span className="text-xs text-slate-400">Ranked by frequency</span>
+                      <span className="text-xs text-slate-500">Ranked by frequency</span>
                     </div>
 
                     {/* Rule Rows 1..6 */}
-                    <div className="space-y-2.5">
-                      {displayBlockReasons.slice(0, 6).map((item, idx) => (
-                        <div
-                          key={item.code}
-                          className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 text-xs hover:bg-slate-100/80 transition-colors"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className="w-6 h-6 rounded-full bg-slate-200/80 text-slate-700 font-mono text-[11px] flex items-center justify-center font-bold shrink-0">
-                              {idx + 1}
-                            </span>
-                            <div className="min-w-0">
-                              <span className="font-semibold text-slate-900 block truncate">
-                                {HUMAN_REASONS[item.code] || item.code}
+                    {displayBlockReasons.length === 0 ? (
+                      <div className="flex-1 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-center flex items-center justify-center">
+                        <p className="text-sm text-slate-600" role="status" aria-live="polite">
+                          No rules blocked in the last {metrics?.windowHours ?? 24} hours.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {displayBlockReasons.slice(0, 6).map((item, idx) => (
+                          <div
+                            key={item.code}
+                            className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 text-xs hover:bg-slate-100/80 transition-colors"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="w-6 h-6 rounded-full bg-slate-200/80 text-slate-700 font-mono text-[11px] flex items-center justify-center font-bold shrink-0">
+                                {idx + 1}
                               </span>
-                              <span className="font-mono text-[10px] text-slate-400 truncate block">
-                                {item.code}
-                              </span>
+                              <div className="min-w-0">
+                                <span className="font-semibold text-slate-900 block truncate">
+                                  {HUMAN_REASONS[item.code] || item.code}
+                                </span>
+                                <span className="font-mono text-[10px] text-slate-500 truncate block">
+                                  {item.code}
+                                </span>
+                              </div>
                             </div>
+                            <span className="font-mono font-semibold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-100 shrink-0 ml-3 text-[11px]">
+                              {item.count} {item.count === 1 ? "hit" : "hits"}
+                            </span>
                           </div>
-                          <span className="font-mono font-semibold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-100 shrink-0 ml-3 text-[11px]">
-                            {item.count} {item.count === 1 ? "hit" : "hits"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
 
                   </div>
                 </div>

@@ -11,7 +11,6 @@ import {
   Clock,
   ChevronRight,
   Bot,
-  SlidersHorizontal,
   ChevronLeft,
 } from "lucide-react";
 
@@ -61,7 +60,7 @@ export function TxTable({
 
   return (
     <>
-      <div className="bg-white rounded-[24px] border border-slate-200/90 shadow-xs overflow-hidden flex flex-col font-sans">
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col font-sans">
         {/* Filters Bar */}
         <div className="p-4 sm:p-5 border-b border-slate-100 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Search Input */}
@@ -114,14 +113,6 @@ export function TxTable({
               })}
             </div>
 
-            {/* More Filters Action */}
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 active:bg-slate-200 border border-slate-200 text-xs font-semibold text-slate-700 shadow-2xs transition-colors cursor-pointer"
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
-              <span>More filters</span>
-            </button>
           </div>
         </div>
 
@@ -204,7 +195,7 @@ export function TxTable({
                         <div className="font-extrabold text-slate-900 text-sm font-sans">
                           ${t.amountUsd}
                         </div>
-                        <div className="text-[11px] font-mono text-slate-400 font-medium">
+                        <div className="text-xs font-mono text-slate-400 font-medium">
                           USDC
                         </div>
                       </td>
@@ -214,7 +205,7 @@ export function TxTable({
                         <div className="font-bold text-slate-900 text-xs truncate" title={t.merchant}>
                           {t.merchant}
                         </div>
-                        <div className="text-[11px] text-slate-400 truncate mt-0.5">
+                        <div className="text-xs text-slate-400 truncate mt-0.5">
                           {resourceLabel(t.resource)}
                         </div>
                       </td>
@@ -232,7 +223,7 @@ export function TxTable({
                         <div className="font-medium text-slate-700 text-xs">
                           {new Date(t.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                         </div>
-                        <div className="text-[11px] text-slate-400 font-mono">
+                        <div className="text-xs text-slate-400 font-mono">
                           {Math.max(1, Math.round((renderedAt - new Date(t.createdAt).getTime()) / 60000))}m ago
                         </div>
                       </td>
@@ -259,7 +250,7 @@ export function TxTable({
               type="button"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="h-8 w-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+              className="h-8 w-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -272,7 +263,7 @@ export function TxTable({
                 className={`h-8 w-8 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   currentPage === page
                     ? "bg-blue-600 text-white font-bold shadow-xs"
-                    : "border border-slate-200 text-slate-700 hover:bg-slate-50"
+                    : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
               >
                 {page}
@@ -285,7 +276,7 @@ export function TxTable({
                 <button
                   type="button"
                   onClick={() => setCurrentPage(totalPages)}
-                  className={`h-8 w-8 rounded-lg text-xs font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer`}
+                  className={`h-8 w-8 rounded-lg text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer`}
                 >
                   {totalPages}
                 </button>
@@ -296,7 +287,7 @@ export function TxTable({
               type="button"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="h-8 w-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+              className="h-8 w-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </button>

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Shield } from "lucide-react";
 import { CloudShader } from "./cloud-shader";
 import { WardenIllustration } from "./warden-illustration";
@@ -17,6 +18,18 @@ export function Hero({
   subtitle = "Control autonomous spending",
   withShader = false,
 }: HeroProps) {
+  const pathname = usePathname();
+
+  const navItems = [
+    { href: "/transactions", label: "Transactions" },
+    { href: "/agents", label: "Agents", hideOnMobile: true },
+    { href: "/audit", label: "Audit Log" },
+    { href: "/merchants", label: "Merchants" },
+    { href: "/approvals", label: "Approval" },
+  ] as const;
+
+  const isActiveNav = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+
   const scrollToOverview = () => {
     const el = document.getElementById("overview-section");
     if (el) {
@@ -40,36 +53,25 @@ export function Hero({
 
         {/* Navigation Links */}
         <nav className="flex items-center gap-4 sm:gap-7 text-sm font-medium text-white/90">
-          <Link
-            href="/transactions"
-            className="hover:text-white transition-colors drop-shadow-sm hover:underline underline-offset-4"
-          >
-            Transactions
-          </Link>
-          <Link
-            href="/agents"
-            className="hover:text-white transition-colors drop-shadow-sm hover:underline underline-offset-4 hidden sm:inline"
-          >
-            Agents
-          </Link>
-          <Link
-            href="/audit"
-            className="hover:text-white transition-colors drop-shadow-sm hover:underline underline-offset-4"
-          >
-            Audit Log
-          </Link>
-          <Link
-            href="/merchants"
-            className="hover:text-white transition-colors drop-shadow-sm hover:underline underline-offset-4"
-          >
-            Merchants
-          </Link>
-          <Link
-            href="/approvals"
-            className="hover:text-white transition-colors drop-shadow-sm hover:underline underline-offset-4"
-          >
-            Approval
-          </Link>
+          {navItems.map((item) => {
+            const isActive = isActiveNav(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? "page" : undefined}
+                className={`transition-colors drop-shadow-sm underline-offset-4 ${
+                  item.hideOnMobile ? "hidden sm:inline " : ""
+                }${
+                  isActive
+                    ? "text-white font-semibold underline decoration-2"
+                    : "hover:text-white hover:underline"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
       </header>
 
@@ -96,7 +98,7 @@ export function Hero({
           <button
             type="button"
             onClick={scrollToOverview}
-            className="px-8 py-3 rounded-full bg-white text-blue-900 font-bold text-sm tracking-wide shadow-lg hover:bg-white/95 active:scale-98 transition-all cursor-pointer"
+            className="px-8 py-3 rounded-full bg-blue-950 text-white font-bold text-sm tracking-wide shadow-[0_12px_30px_rgba(15,23,42,0.35)] hover:bg-blue-900 active:scale-98 transition-all cursor-pointer"
           >
             Overview
           </button>

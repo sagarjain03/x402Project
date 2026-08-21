@@ -42,10 +42,10 @@ export function BudgetBars({
     <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-900">
+          <h3 className="text-sm font-bold tracking-wide text-zinc-900">
             Budget used by agent ({windowLabel})
           </h3>
-          <p className="mt-0.5 text-xs text-zinc-400">
+          <p className="mt-0.5 text-xs text-slate-500">
             Committed spend plus live reservations, against the ceiling in each agent&apos;s policy.
           </p>
         </div>

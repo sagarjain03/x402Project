@@ -197,10 +197,10 @@ export function AgentCard({ agent }: { agent: AgentItem }) {
       </div>
 
       <div className="flex items-center justify-between border-t border-zinc-100 bg-zinc-50/50 px-6 py-3 text-xs">
-        <span className="font-mono text-zinc-400">Funded: ${agent.walletFundedUsd} USDC</span>
+        <span className="font-mono text-sm font-semibold text-slate-700">Funded: ${agent.walletFundedUsd} USDC</span>
         <Link
           href={`/agents/${agent.id}`}
-          className="inline-flex items-center gap-1 font-semibold text-emerald-600 transition-colors hover:text-emerald-700"
+          className="inline-flex items-center gap-1 font-medium text-emerald-700 transition-colors hover:text-emerald-800"
         >
           <span>View details</span>
           <ArrowRight className="h-3.5 w-3.5" />

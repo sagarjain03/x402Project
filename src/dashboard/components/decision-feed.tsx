@@ -9,7 +9,7 @@ import { useLiveDecisions, type LiveDecisionItem } from "@/dashboard/hooks/useLi
 import { DecisionBadge } from "@/dashboard/components/decision-badge";
 import { ReasonChip } from "@/dashboard/components/reason-chip";
 import { resourceLabel } from "@/dashboard/resource-label";
-import { ExternalLink, Clock, ShieldX } from "lucide-react";
+import { ExternalLink, Clock } from "lucide-react";
 import { explorerTxUrl } from "@/shared/explorer";
 
 export function DecisionFeed({
@@ -92,7 +92,9 @@ function DecisionRow({ item }: { item: LiveDecisionItem }) {
   const primaryReason = item.reasons?.[0];
 
   return (
-    <div className="p-4 transition-colors hover:bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 last:border-b-0">
+    <div className={`pl-4 pr-4 pt-4 pb-4 transition-colors hover:bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 last:border-b-0 ${
+      isBlock ? "border-l-2 border-l-red-500" : "border-l-2 border-l-transparent"
+    }`}>
       {/* Left: Badge, Agent, Merchant, Amount */}
       <div className="flex items-start sm:items-center gap-3.5 min-w-0">
         <DecisionBadge decision={item.decision} className="shrink-0 mt-0.5 sm:mt-0" />
@@ -107,7 +109,7 @@ function DecisionRow({ item }: { item: LiveDecisionItem }) {
               {item.merchant}
             </span>
             {item.agentName && (
-              <span className="px-1.5 py-0.5 rounded text-[11px] font-mono bg-zinc-100 text-zinc-600 border border-zinc-200">
+              <span className="text-[11px] font-mono text-gray-400">
                 {item.agentName}
               </span>
             )}
@@ -154,13 +156,10 @@ function DecisionRow({ item }: { item: LiveDecisionItem }) {
           </div>
         )}
 
-        {/* Rule 1+2: BLOCK — red icon + neutral text, no rose pill */}
+        {/* BLOCK: bare red text, no box — left-border is on the row itself */}
         {isBlock && (
           <div className="flex flex-col sm:items-end gap-1">
-            <div className="flex items-center gap-1.5">
-              <ShieldX className="h-3.5 w-3.5 text-red-500 shrink-0" />
-              <span className="text-xs font-semibold text-gray-700">No transaction created</span>
-            </div>
+            <span className="text-xs font-bold text-red-600 tracking-widest uppercase">No transaction created</span>
             {primaryReason && (
               <ReasonChip code={primaryReason.code} message={primaryReason.message} />
             )}

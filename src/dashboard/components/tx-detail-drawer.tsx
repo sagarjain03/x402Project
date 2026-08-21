@@ -7,7 +7,6 @@ import {
   X,
   ShieldAlert,
   ShieldCheck,
-  ShieldBan,
   Clock,
   ExternalLink,
   Bot,
@@ -15,8 +14,6 @@ import {
   Wallet,
   Zap,
   Sliders,
-  CheckCircle2,
-  AlertOctagon,
   FileCode,
   ArrowRight,
 } from "lucide-react";
@@ -67,28 +64,21 @@ export function TxDetailDrawer({ tx, isOpen, onClose }: TxDetailDrawerProps) {
         <div>
           <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-20">
             <div className="flex items-center gap-3">
-              <div
-                className={`h-9 w-9 rounded-xl flex items-center justify-center ${
-                  isAllow
-                    ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-                    : isBlock
-                    ? "bg-rose-50 text-rose-600 border border-rose-200"
-                    : "bg-amber-50 text-amber-600 border border-amber-200"
-                }`}
-              >
-                {isAllow ? (
-                  <ShieldCheck className="h-5 w-5" />
-                ) : isBlock ? (
-                  <ShieldBan className="h-5 w-5" />
-                ) : (
-                  <Clock className="h-5 w-5" />
-                )}
-              </div>
+              {/* Plain icon — no coloured container */}
+              {isAllow ? (
+                <ShieldCheck className="h-5 w-5 text-emerald-500" />
+              ) : isBlock ? (
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" className="h-5 w-5 text-red-500">
+                  <line x1="3" y1="3" x2="13" y2="13" /><line x1="13" y1="3" x2="3" y2="13" />
+                </svg>
+              ) : (
+                <Clock className="h-5 w-5 text-amber-400" />
+              )}
               <div>
                 <h3 className="font-bold text-lg text-slate-900">
                   Transaction Detail
                 </h3>
-                <p className="text-xs font-mono text-slate-400">
+                <p className="text-xs font-mono text-gray-400">
                   {targetId}
                 </p>
               </div>
@@ -130,39 +120,33 @@ export function TxDetailDrawer({ tx, isOpen, onClose }: TxDetailDrawerProps) {
               </span>
             </div>
 
-            {/* Rule 1: BLOCKED info box — white card + left red accent */}
+            {/* BLOCKED: bare text, border-l-2 on container — no coloured box */}
             {isBlock && (
-              <div className="flex items-start gap-3 p-4 rounded-xl border border-gray-100 bg-white border-l-4 border-l-red-500">
-                <AlertOctagon className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-xs font-bold text-gray-800">BLOCKED BEFORE SIGNING</p>
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    This intent was intercepted by the deterministic policy engine before any cryptographic signature or blockchain submission. No transaction was submitted, and no funds left the agent wallet.
-                  </p>
-                </div>
+              <div className="border-l-2 border-l-red-500 pl-3 space-y-0.5">
+                <p className="text-xs font-bold text-red-600 tracking-widest uppercase">Blocked Before Signing</p>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Intercepted before any signature or submission. No funds moved.
+                </p>
               </div>
             )}
 
-            {/* Rule 1+3: SETTLED info box — white card + left green accent; hash as plain monospace link */}
+            {/* SETTLED: bare text, border-l-2 — no coloured box; hash as raw gray-400 mono */}
             {isAllow && tx.txHash && (
-              <div className="flex items-start gap-3 p-4 rounded-xl border border-gray-100 bg-white border-l-4 border-l-emerald-400">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                <div className="space-y-1 min-w-0">
-                  <p className="text-xs font-bold text-gray-800">SETTLED ON-CHAIN ({networkLabel(tx.network)})</p>
-                  {/* Rule 3: hash as plain monospace text, no background pill */}
-                  <p className="font-mono text-xs text-gray-500 truncate hover:text-gray-900 transition-colors cursor-default" title={tx.txHash}>
-                    {tx.txHash}
-                  </p>
-                  <a
-                    href={explorerTxUrl(tx.network, tx.txHash) ?? "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors"
-                  >
-                    <span>View on {explorerName(tx.network)} Explorer</span>
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                </div>
+              <div className="border-l-2 border-l-emerald-400 pl-3 space-y-1">
+                <p className="text-xs font-bold text-gray-600 tracking-widest uppercase">Settled On-Chain ({networkLabel(tx.network)})</p>
+                {/* Raw monospace hash — text-gray-400, no background */}
+                <p className="font-mono text-xs text-gray-400 truncate" title={tx.txHash}>
+                  {tx.txHash}
+                </p>
+                <a
+                  href={explorerTxUrl(tx.network, tx.txHash) ?? "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors"
+                >
+                  <span>View on {explorerName(tx.network)}</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               </div>
             )}
 

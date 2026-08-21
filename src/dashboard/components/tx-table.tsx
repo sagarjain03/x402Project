@@ -7,8 +7,6 @@ import { ReasonChip } from "@/dashboard/components/reason-chip";
 import { resourceLabel } from "@/dashboard/resource-label";
 import {
   Search,
-  ShieldCheck,
-  ShieldBan,
   Clock,
   ChevronRight,
   Bot,
@@ -22,7 +20,6 @@ import {
   TableHead,
   TableCell,
 } from "@/dashboard/components/ui/table";
-import { Badge } from "@/dashboard/components/ui/badge";
 import { Button } from "@/dashboard/components/ui/button";
 import { Input } from "@/dashboard/components/ui/input";
 
@@ -177,30 +174,35 @@ export function TxTable({
                         handleRowClick(t);
                       }
                     }}
-                    className="hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:bg-slate-50 transition-all cursor-pointer group select-none border-b border-gray-100 last:border-b-0"
+                    className={`hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:bg-slate-50 transition-all cursor-pointer group select-none border-b border-gray-100 last:border-b-0 ${
+                      isBlock ? "border-l-2 border-l-red-500" : ""
+                    }`}
                   >
                     <TableCell className="py-3.5 px-5 whitespace-nowrap">
-                      <Badge
-                        variant={isAllow ? "success" : isBlock ? "destructive" : "warning"}
-                        className="gap-1.5 px-3 py-1 font-mono uppercase tracking-wide text-xs font-bold"
-                      >
-                        {isAllow ? (
-                          <>
-                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                            <span>ALLOWED</span>
-                          </>
-                        ) : isBlock ? (
-                          <>
-                            <ShieldBan className="h-3.5 w-3.5 text-rose-600" />
-                            <span>BLOCKED</span>
-                          </>
-                        ) : (
-                          <>
-                            <Clock className="h-3.5 w-3.5 text-amber-600" />
-                            <span>HELD</span>
-                          </>
-                        )}
-                      </Badge>
+                      {/* Ultra-minimalist status: SVG icon + tracking-widest uppercase text */}
+                      {isAllow ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-emerald-500 shrink-0">
+                            <polyline points="2.5,8.5 6.5,12.5 13.5,3.5" />
+                          </svg>
+                          <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Allowed</span>
+                        </span>
+                      ) : isBlock ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" className="h-3.5 w-3.5 text-red-500 shrink-0">
+                            <line x1="3" y1="3" x2="13" y2="13" /><line x1="13" y1="3" x2="3" y2="13" />
+                          </svg>
+                          <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Blocked</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5">
+                          <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 text-amber-400 shrink-0">
+                            <rect x="3" y="2" width="3.5" height="12" rx="1" />
+                            <rect x="9.5" y="2" width="3.5" height="12" rx="1" />
+                          </svg>
+                          <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Held</span>
+                        </span>
+                      )}
                     </TableCell>
 
                     <TableCell className="py-3.5 px-5 whitespace-nowrap">
@@ -216,13 +218,11 @@ export function TxTable({
                     </TableCell>
 
                     <TableCell className="py-3.5 px-5 whitespace-nowrap">
-                      <Badge
-                        variant="secondary"
-                        className="gap-1.5 px-2.5 py-1 text-xs font-semibold bg-slate-50 text-slate-700 border-slate-200"
-                      >
-                        <Bot className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                        <span>{t.agentName || t.agentId}</span>
-                      </Badge>
+                      {/* Bare agent name: Bot icon + plain text, no pill */}
+                      <span className="inline-flex items-center gap-1.5">
+                        <Bot className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                        <span className="text-xs text-gray-600 font-medium">{t.agentName || t.agentId}</span>
+                      </span>
                     </TableCell>
 
                     <TableCell className="py-3.5 px-5 max-w-[260px]">

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-  ShieldAlert,
+  AlertOctagon,
   ArrowRight,
   AlertTriangle,
 } from "lucide-react";
@@ -88,7 +88,7 @@ export function PolicySimulationResults({ data }: PolicySimulationResultsProps) 
     if (item.was === "ALLOW" && item.wouldBe === "BLOCK") {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-rose-100 text-rose-900 border border-rose-300">
-          <ShieldAlert className="h-3 w-3 text-rose-700" />
+          <AlertOctagon className="h-3 w-3 text-rose-700" />
           Tightened (Now Blocked)
         </span>
       );
@@ -147,7 +147,7 @@ export function PolicySimulationResults({ data }: PolicySimulationResultsProps) 
 
         <div className="bg-white rounded-xl border border-zinc-200 p-4 shadow-sm">
           <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-            <ShieldAlert className="h-3.5 w-3.5 text-rose-600" />
+            <AlertOctagon className="h-3.5 w-3.5 text-rose-600" />
             Newly Blocked
           </span>
           <div className="mt-1 flex items-baseline gap-2">
@@ -175,44 +175,40 @@ export function PolicySimulationResults({ data }: PolicySimulationResultsProps) 
           <button
             type="button"
             onClick={() => setActiveFilter("CHANGED")}
-            className={`px-3 py-1 rounded-md transition-colors ${
-              activeFilter === "CHANGED"
+            className={`px-3 py-1 rounded-md transition-colors ${activeFilter === "CHANGED"
                 ? "bg-zinc-900 text-white font-bold"
                 : "text-zinc-600 hover:text-zinc-900"
-            }`}
+              }`}
           >
             Changed Only ({data.changedCount})
           </button>
           <button
             type="button"
             onClick={() => setActiveFilter("NEWLY_BLOCKED")}
-            className={`px-3 py-1 rounded-md transition-colors ${
-              activeFilter === "NEWLY_BLOCKED"
+            className={`px-3 py-1 rounded-md transition-colors ${activeFilter === "NEWLY_BLOCKED"
                 ? "bg-rose-600 text-white font-bold"
                 : "text-zinc-600 hover:text-zinc-900"
-            }`}
+              }`}
           >
             Newly Blocked ({data.newlyBlocked})
           </button>
           <button
             type="button"
             onClick={() => setActiveFilter("NEWLY_ALLOWED")}
-            className={`px-3 py-1 rounded-md transition-colors ${
-              activeFilter === "NEWLY_ALLOWED"
+            className={`px-3 py-1 rounded-md transition-colors ${activeFilter === "NEWLY_ALLOWED"
                 ? "bg-amber-600 text-white font-bold"
                 : "text-zinc-600 hover:text-zinc-900"
-            }`}
+              }`}
           >
             Newly Allowed ({data.newlyAllowed})
           </button>
           <button
             type="button"
             onClick={() => setActiveFilter("ALL")}
-            className={`px-3 py-1 rounded-md transition-colors ${
-              activeFilter === "ALL"
+            className={`px-3 py-1 rounded-md transition-colors ${activeFilter === "ALL"
                 ? "bg-zinc-900 text-white font-bold"
                 : "text-zinc-600 hover:text-zinc-900"
-            }`}
+              }`}
           >
             All Simulated ({data.simulated})
           </button>
@@ -256,15 +252,14 @@ export function PolicySimulationResults({ data }: PolicySimulationResultsProps) 
                 filteredResults.map((item) => (
                   <tr
                     key={item.intentId}
-                    className={`hover:bg-zinc-50/80 transition-colors ${
-                      item.changed
+                    className={`hover:bg-zinc-50/80 transition-colors ${item.changed
                         ? item.wouldBe === "BLOCK"
                           ? "bg-rose-50/20"
                           : item.wouldBe === "ALLOW"
-                          ? "bg-amber-50/20"
-                          : "bg-blue-50/20"
+                            ? "bg-amber-50/20"
+                            : "bg-blue-50/20"
                         : ""
-                    }`}
+                      }`}
                   >
                     {/* Intent / Merchant */}
                     <td className="py-3 px-4">

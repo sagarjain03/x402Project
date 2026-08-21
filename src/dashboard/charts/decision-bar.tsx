@@ -59,27 +59,27 @@ export function DecisionBar({
           No decisions recorded yet. Run a task from the agent console and this fills in.
         </p>
       ) : (
-      <div className="h-56 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid vertical={false} stroke="#f4f4f5" />
-            <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#71717a" }} />
-            <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#71717a" }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#18181b",
-                borderColor: "#27272a",
-                borderRadius: "8px",
-                color: "#f4f4f5",
-                fontSize: "12px",
-              }}
-            />
-            <Bar dataKey="allow" fill="#10b981" radius={[4, 4, 0, 0]} name="ALLOW" />
-            <Bar dataKey="hold" fill="#f59e0b" radius={[4, 4, 0, 0]} name="HOLD" />
-            <Bar dataKey="block" fill="#f43f5e" radius={[4, 4, 0, 0]} name="BLOCK" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+        <div className="h-56 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid vertical={false} stroke="#f4f4f5" />
+              <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#71717a" }} />
+              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#71717a" }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#18181b",
+                  borderColor: "#27272a",
+                  borderRadius: "8px",
+                  color: "#f4f4f5",
+                  fontSize: "12px",
+                }}
+              />
+              <Bar dataKey="allow" fill="#10b981" radius={[4, 4, 0, 0]} name="ALLOW" />
+              <Bar dataKey="hold" fill="#f59e0b" radius={[4, 4, 0, 0]} name="HOLD" />
+              <Bar dataKey="block" fill="#f43f5e" radius={[4, 4, 0, 0]} name="BLOCK" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       )}
     </div>
   );

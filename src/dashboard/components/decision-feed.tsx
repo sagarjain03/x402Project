@@ -9,7 +9,7 @@ import { useLiveDecisions, type LiveDecisionItem } from "@/dashboard/hooks/useLi
 import { DecisionBadge } from "@/dashboard/components/decision-badge";
 import { ReasonChip } from "@/dashboard/components/reason-chip";
 import { resourceLabel } from "@/dashboard/resource-label";
-import { ExternalLink, Clock, ShieldX, Radio } from "lucide-react";
+import { ExternalLink, Clock } from "lucide-react";
 import { explorerTxUrl } from "@/shared/explorer";
 
 export function DecisionFeed({
@@ -55,16 +55,15 @@ export function DecisionFeed({
           </p>
         </div>
 
+        {/* Rule 2: Connected status — dot indicator, no pill background */}
         <div className="flex items-center gap-2">
-          <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-              isConnected
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : "bg-amber-50 text-amber-700 border border-amber-200"
-            }`}
-          >
-            <Radio className={`h-3 w-3 ${isConnected ? "text-emerald-500 animate-pulse" : "text-amber-500"}`} />
-            {isConnected ? "Live stream connected" : "Stream disconnected — reload to refresh"}
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600">
+            <span
+              className={`h-2 w-2 rounded-full shrink-0 ${
+                isConnected ? "bg-emerald-500 animate-pulse" : "bg-amber-400"
+              }`}
+            />
+            {isConnected ? "Live" : "Reconnecting"}
           </span>
         </div>
       </div>
@@ -93,11 +92,9 @@ function DecisionRow({ item }: { item: LiveDecisionItem }) {
   const primaryReason = item.reasons?.[0];
 
   return (
-    <div
-      className={`p-4 transition-colors hover:bg-zinc-50/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-        isBlock ? "bg-rose-50/20" : isHold ? "bg-amber-50/20" : ""
-      }`}
-    >
+    <div className={`pl-4 pr-4 pt-4 pb-4 transition-colors hover:bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 last:border-b-0 ${
+      isBlock ? "border-l-2 border-l-red-500" : "border-l-2 border-l-transparent"
+    }`}>
       {/* Left: Badge, Agent, Merchant, Amount */}
       <div className="flex items-start sm:items-center gap-3.5 min-w-0">
         <DecisionBadge decision={item.decision} className="shrink-0 mt-0.5 sm:mt-0" />
@@ -112,7 +109,7 @@ function DecisionRow({ item }: { item: LiveDecisionItem }) {
               {item.merchant}
             </span>
             {item.agentName && (
-              <span className="px-1.5 py-0.5 rounded text-[11px] font-mono bg-zinc-100 text-zinc-600 border border-zinc-200">
+              <span className="text-[11px] font-mono text-gray-400">
                 {item.agentName}
               </span>
             )}
@@ -134,23 +131,23 @@ function DecisionRow({ item }: { item: LiveDecisionItem }) {
 
       {/* Right: Specific Visual Enforcement Rule Proof */}
       <div className="shrink-0 flex items-center gap-2 sm:text-right">
-        {/* ALLOW: the hash links to whichever explorer owns this rail. */}
+        {/* Rule 3: ALLOW hash — plain monospace text, no pill background */}
         {isAllow && item.txHash && explorerTxUrl(item.network, item.txHash) && (
           <a
             href={explorerTxUrl(item.network, item.txHash)!}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-mono text-emerald-600 hover:text-emerald-700 hover:underline bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-mono text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
           >
             <span>{item.txHash.slice(0, 8)}...{item.txHash.slice(-6)}</span>
             <ExternalLink className="h-3 w-3 shrink-0" />
           </a>
         )}
 
-        {/* 🟡 HOLD: Must show countdown or pending status */}
+        {/* Rule 2: HOLD — clock icon + neutral text, no amber pill */}
         {isHold && (
-          <div className="inline-flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
-            <Clock className="h-3.5 w-3.5 text-amber-600" />
+          <div className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+            <Clock className="h-3.5 w-3.5 text-gray-400" />
             <span className="font-medium">
               {item.approvalExpiresAt
                 ? `Expires ${new Date(item.approvalExpiresAt).toLocaleTimeString()}`
@@ -159,15 +156,10 @@ function DecisionRow({ item }: { item: LiveDecisionItem }) {
           </div>
         )}
 
-        {/* 🔴 BLOCK: Must show reason chip and the exact words "no transaction created" */}
+        {/* BLOCK: bare red text, no box — left-border is on the row itself */}
         {isBlock && (
           <div className="flex flex-col sm:items-end gap-1">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-700 bg-rose-100/90 px-2 py-0.5 rounded border border-rose-300 tracking-wide uppercase">
-                <ShieldX className="h-3 w-3 text-rose-600" />
-                no transaction created
-              </span>
-            </div>
+            <span className="text-xs font-bold text-red-600 tracking-widest uppercase">No transaction created</span>
             {primaryReason && (
               <ReasonChip code={primaryReason.code} message={primaryReason.message} />
             )}

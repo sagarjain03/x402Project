@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { apiPost, ApiClientError } from "@/dashboard/api-client/client";
 import { API } from "@/dashboard/api-client/endpoints";
-import { Bot, Check, Copy, KeyRound, Loader2, ShieldCheck, X } from "lucide-react";
+import { Bot, Check, Copy, KeyRound, Loader2, CheckCircle2, X } from "lucide-react";
 import { Button } from "@/dashboard/components/ui/button";
 import { Input } from "@/dashboard/components/ui/input";
 import { Alert, AlertDescription } from "@/dashboard/components/ui/alert";
@@ -148,7 +148,7 @@ export function CreateAgentModal({ onClose, onCreated }: { onClose: () => void; 
             </div>
 
             <div className="flex gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-              <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
               <p>
                 Starts on the <span className="font-semibold">conservative</span> policy — an agent is
                 never registered without one. It signs with the Guard&apos;s wallet and never holds a

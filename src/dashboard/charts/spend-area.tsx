@@ -56,60 +56,60 @@ export function SpendArea({
           so nothing is plotted for them.
         </p>
       ) : (
-      <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
-              </linearGradient>
-            </defs>
-            <XAxis
-              dataKey="time"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 11, fill: "#71717a" }}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(v) => `$${v}`}
-              tick={{ fontSize: 11, fill: "#71717a" }}
-            />
-            <Tooltip
-              formatter={(val: number | string) => [`$${Number(val).toFixed(2)}`, "Cumulative Spend"]}
-              labelFormatter={(label) => `Time: ${label}`}
-              contentStyle={{
-                backgroundColor: "#18181b",
-                borderColor: "#27272a",
-                borderRadius: "8px",
-                color: "#f4f4f5",
-                fontSize: "12px",
-              }}
-            />
-            <ReferenceLine
-              y={budgetCeiling}
-              stroke="#ef4444"
-              strokeDasharray="3 3"
-              label={{
-                value: `${ceilingLabel}: $${budgetCeiling.toFixed(2)}`,
-                fill: "#ef4444",
-                fontSize: 10,
-                position: "right",
-              }}
-            />
-            <Area
-              type="monotone"
-              dataKey="spend"
-              stroke="#10b981"
-              strokeWidth={2.5}
-              fillOpacity={1}
-              fill="url(#spendGradient)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="time"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 11, fill: "#71717a" }}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v) => `$${v}`}
+                tick={{ fontSize: 11, fill: "#71717a" }}
+              />
+              <Tooltip
+                formatter={(val: number | string) => [`$${Number(val).toFixed(2)}`, "Cumulative Spend"]}
+                labelFormatter={(label) => `Time: ${label}`}
+                contentStyle={{
+                  backgroundColor: "#18181b",
+                  borderColor: "#27272a",
+                  borderRadius: "8px",
+                  color: "#f4f4f5",
+                  fontSize: "12px",
+                }}
+              />
+              <ReferenceLine
+                y={budgetCeiling}
+                stroke="#ef4444"
+                strokeDasharray="3 3"
+                label={{
+                  value: `${ceilingLabel}: $${budgetCeiling.toFixed(2)}`,
+                  fill: "#ef4444",
+                  fontSize: 10,
+                  position: "right",
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="spend"
+                stroke="#10b981"
+                strokeWidth={2.5}
+                fillOpacity={1}
+                fill="url(#spendGradient)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       )}
     </div>
   );

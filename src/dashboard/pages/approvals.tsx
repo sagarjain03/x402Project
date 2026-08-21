@@ -7,7 +7,7 @@ import {
   secondsLeft,
   usePendingApprovals,
 } from "@/dashboard/hooks/usePendingApprovals";
-import { CheckCircle2, Clock, Hourglass, RefreshCw, ShieldAlert, Timer, Trash2 } from "lucide-react";
+import { CheckCircle2, Clock, Hourglass, RefreshCw, AlertOctagon, Timer, Trash2 } from "lucide-react";
 
 /**
  * OWNER: UI · The HOLD queue.
@@ -72,7 +72,7 @@ export function ApprovalsPage() {
         <div>
           <h2 className="flex items-center gap-3 font-sans text-3xl font-bold tracking-tight text-slate-900">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-600">
-              <ShieldAlert className="h-5 w-5" />
+              <AlertOctagon className="h-5 w-5" />
             </div>
             Approval inbox
           </h2>

@@ -6,8 +6,6 @@ import { API } from "@/dashboard/api-client/endpoints";
 import { ScenarioTerminal } from "@/dashboard/components/scenario-terminal";
 import {
   PlayCircle,
-  ShieldCheck,
-  ShieldAlert,
   Clock,
   Sparkles,
   RotateCw,
@@ -181,23 +179,22 @@ export function SimulatorPage() {
   return (
     <div className="space-y-8">
       {/* Header & Hero Action */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs space-y-4">
+      <div className="bg-white rounded-2xl border border-zinc-200/90 p-6 shadow-xs space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center">
                 <PlayCircle className="h-5 w-5" />
               </div>
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-sans">
+              <h1 className="text-3xl font-bold tracking-tight text-zinc-900 font-sans">
                 Deterministic Attack Drills & Policy Replay
-              </h2>
+              </h1>
             </div>
-            <p className="text-sm text-slate-500 mt-1 max-w-2xl">
+            <p className="text-sm text-zinc-500 mt-1 max-w-2xl">
               One-click live execution harness streaming genuine Guard decisions, Lora settlement links, and deterministic pre-signature interception proofs in real time.
             </p>
           </div>
 
-          {/* Run All CTA Button */}
           <div className="flex items-center gap-3 shrink-0">
             <button
               type="button"
@@ -220,28 +217,26 @@ export function SimulatorPage() {
           </div>
         </div>
 
-        {/* Live Execution Metric Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-100 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">Drills Executed:</span>
-            <span className="font-bold font-mono text-slate-900">{executedCount} / {SCENARIOS.length}</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-zinc-100">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs text-zinc-400">Drills Executed</span>
+            <span className="text-xl font-bold font-mono text-zinc-900 leading-tight">{executedCount} / {SCENARIOS.length}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">Passed:</span>
-            <span className="font-bold font-mono text-emerald-600">{passedCount}</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs text-zinc-400">Passed</span>
+            <span className="text-xl font-bold font-mono text-emerald-600 leading-tight">{passedCount}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">Blocked Spend:</span>
-            <span className="font-bold font-mono text-rose-600">${blockedSpendUsd}</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs text-zinc-400">Blocked Spend</span>
+            <span className="text-xl font-bold font-mono text-rose-600 leading-tight">${blockedSpendUsd}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">Attack On-Chain Txs:</span>
-            <span className="font-bold font-mono text-slate-900">0 (Blocked Pre-Signature)</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs text-zinc-400">Attack On-Chain Txs</span>
+            <span className="text-xl font-bold font-mono text-zinc-900 leading-tight">0 <span className="text-xs font-normal text-zinc-400">(pre-sig)</span></span>
           </div>
         </div>
       </div>
 
-      {/* Scenarios Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {SCENARIOS.map((s) => {
           const isRunning = runningId === s.id;
@@ -251,51 +246,51 @@ export function SimulatorPage() {
           return (
             <div
               key={s.id}
-              className={`bg-white rounded-2xl border p-5 shadow-xs flex flex-col justify-between space-y-4 transition-all ${
-                isRunning
+              className={`bg-white rounded-xl border p-5 shadow-xs flex flex-col justify-between space-y-4 transition-all ${isRunning
                   ? "border-blue-400 ring-2 ring-blue-100 shadow-md"
                   : result?.passed
-                  ? "border-slate-200 hover:border-slate-300 hover:shadow-sm"
-                  : "border-slate-200"
-              }`}
+                    ? "border-zinc-200 hover:border-zinc-300 hover:shadow-sm"
+                    : "border-zinc-200"
+                }`}
             >
-              {/* Card Header & Intent */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-slate-900 font-mono">{s.name}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {s.ruleCode && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-                        {s.ruleCode}
+                {/* Card Header — issues 2,4,8 */}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="font-bold text-sm text-zinc-900 font-mono">{s.name}</span>
+                    {/* Issue 8: tags now left-aligned below title, not split to the far right */}
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                      {s.ruleCode && (
+                        /* Issues 2,4: text-xs (12px min), normal-case removes all-caps, rounded-md */
+                        <span className="px-2 py-0.5 rounded-md text-xs font-mono font-semibold bg-zinc-100 text-zinc-600 border border-zinc-200 normal-case">
+                          {s.ruleCode}
+                        </span>
+                      )}
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold font-mono ${s.expected === "ALLOW"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : s.expected === "HOLD"
+                              ? "bg-amber-50 text-amber-700 border border-amber-200"
+                              : "bg-rose-50 text-rose-700 border border-rose-200"
+                          }`}
+                      >
+                        Expected: {s.expected}
                       </span>
-                    )}
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-                        s.expected === "ALLOW"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                          : s.expected === "HOLD"
-                          ? "bg-amber-50 text-amber-700 border border-amber-200"
-                          : "bg-rose-50 text-rose-700 border border-rose-200"
-                      }`}
-                    >
-                      Expected: {s.expected}
-                    </span>
+                    </div>
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-600 leading-relaxed">{s.description}</p>
+                <p className="text-xs text-zinc-600 leading-relaxed">{s.description}</p>
 
-                {/* Intent Code Pill */}
-                <div className="font-mono text-[11px] bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-slate-700">
+                {/* Intent Code Pill — issue 1,9: rounded-md, more padding, text-xs */}
+                <div className="font-mono text-xs bg-zinc-50 px-3 py-2.5 rounded-md border border-zinc-200 text-zinc-700 leading-relaxed">
                   {s.intentPreview}
                 </div>
 
-                {/* Proof Callout */}
+                {/* Proof Callout — issues 3,9: text-xs (12px), leading-relaxed */}
                 {s.highlightProof && (
-                  <p className="text-[11px] text-slate-500 italic flex items-center gap-1.5">
-                    <span className="font-semibold not-italic text-slate-700 font-mono">Proof:</span>
+                  <p className="text-xs text-zinc-500 italic flex items-start gap-1.5 leading-relaxed">
+                    <span className="font-semibold not-italic text-zinc-700 font-mono shrink-0">Proof:</span>
                     {s.highlightProof}
                   </p>
                 )}
@@ -303,25 +298,21 @@ export function SimulatorPage() {
 
               {/* Action & Terminal Console */}
               <div className="space-y-3 pt-2">
-                {/* Run Button */}
+                {/* Run Button — issue 7: ghost/outline secondary style to de-emphasise vs. primary blue CTA */}
                 <button
                   type="button"
                   onClick={() => handleRunSingle(s)}
                   disabled={isRunning || isRunningAll}
-                  className={`w-full py-2 px-4 font-semibold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 ${
-                    s.expected === "ALLOW"
-                      ? "bg-slate-900 hover:bg-black text-white"
-                      : "bg-slate-900 hover:bg-black text-white"
-                  }`}
+                  className="w-full py-2 px-4 font-semibold text-xs rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 text-zinc-700 shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                 >
                   {isRunning ? (
                     <>
-                      <RotateCw className="h-3.5 w-3.5 animate-spin text-emerald-400" />
+                      <RotateCw className="h-3.5 w-3.5 animate-spin text-blue-500" />
                       <span>Executing Scenario {s.id}...</span>
                     </>
                   ) : (
                     <>
-                      <PlayCircle className="h-3.5 w-3.5 text-emerald-400" />
+                      <PlayCircle className="h-3.5 w-3.5 text-zinc-500" />
                       <span>Run Scenario {s.id}</span>
                     </>
                   )}

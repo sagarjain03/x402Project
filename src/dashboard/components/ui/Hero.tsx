@@ -27,7 +27,7 @@ export function Hero({
     { href: "/audit", label: "Audit Log" },
     { href: "/merchants", label: "Merchants" },
     { href: "/simulator", label: "Attack Drills" },
-  ] as const;
+  ];
 
   const isActiveNav = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 

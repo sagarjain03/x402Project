@@ -73,6 +73,14 @@ function toReason(value: unknown): { code: string; rule?: string; message: strin
   };
 }
 
+/**
+ * The event bus behind /events/stream is in-process, so on a multi-instance deploy the payment is
+ * evaluated in one instance and the stream is held by another — the connection opens, sends
+ * `ready`, and then delivers nothing forever. Polling the transactions endpoint is what actually
+ * keeps the feed live there; SSE stays as the instant path when one process serves both.
+ */
+const REFRESH_MS = 10_000;
+
 export function useLiveDecisions(agentId?: string) {
   const [decisions, setDecisions] = useState<LiveDecisionItem[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -82,22 +90,39 @@ export function useLiveDecisions(agentId?: string) {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadInitial() {
+    // The server is the source of truth: a refresh replaces the list rather than merging, so an
+    // optimistic row from SSE that never landed in Postgres disappears instead of lingering.
+    async function fetchRows(): Promise<boolean> {
+      const path = agentId ? `${API.transactions}?agentId=${agentId}` : API.transactions;
       try {
-        setLoading(true);
-        const path = agentId ? `${API.transactions}?agentId=${agentId}` : API.transactions;
         const res = await apiGet<TransactionsApiResponse>(path);
-        if (isMounted && res?.transactions) {
-          setDecisions(res.transactions.map(toFeedItem));
-        }
+        if (isMounted && res?.transactions) setDecisions(res.transactions.map(toFeedItem));
+        return true;
       } catch (err) {
-        console.warn("[useLiveDecisions] Failed to load initial decisions:", err);
-      } finally {
-        if (isMounted) setLoading(false);
+        console.warn("[useLiveDecisions] Failed to load decisions:", err);
+        return false;
+      }
+    }
+
+    async function loadInitial() {
+      setLoading(true);
+      const ok = await fetchRows();
+      if (isMounted) {
+        setIsConnected(ok);
+        setLoading(false);
       }
     }
 
     loadInitial();
+
+    // "Live" has to mean data actually arrived. A stream that is open but silent is not live, and
+    // a background tab polling every 10s is just wasted requests.
+    const poll = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      void fetchRows().then((ok) => {
+        if (isMounted) setIsConnected(ok);
+      });
+    }, REFRESH_MS);
 
     // Setup SSE connection
     function connectSSE() {
@@ -108,9 +133,8 @@ export function useLiveDecisions(agentId?: string) {
         const es = new EventSource(sseUrl);
         eventSourceRef.current = es;
 
-        es.onopen = () => {
-          if (isMounted) setIsConnected(true);
-        };
+        // Deliberately does not touch isConnected: an open stream proves the route answered, not
+        // that any decision will ever come down it. The poll owns that flag.
 
         const handleEvent = (event: MessageEvent) => {
           try {
@@ -161,9 +185,9 @@ export function useLiveDecisions(agentId?: string) {
         es.addEventListener("settlement", handleEvent);
 
         es.onerror = () => {
-          if (isMounted) setIsConnected(false);
           es.close();
-          // Auto-reconnect after 3 seconds
+          // Auto-reconnect after 3 seconds. The poll keeps the feed current meanwhile, so a stream
+          // that never comes back is a lost optimisation, not a broken page.
           setTimeout(() => {
             if (isMounted) connectSSE();
           }, 3000);
@@ -177,6 +201,7 @@ export function useLiveDecisions(agentId?: string) {
 
     return () => {
       isMounted = false;
+      clearInterval(poll);
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;

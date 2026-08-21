@@ -19,7 +19,15 @@ export const env = {
   get ROGUE_ALGORAND_ADDRESS() { return required("ROGUE_ALGORAND_ADDRESS"); },
   get X402_FACILITATOR_URL() { return required("X402_FACILITATOR_URL"); },
   get GUARD_HMAC_SECRET() { return required("GUARD_HMAC_SECRET"); },
-  get APP_URL() { return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"; },
+  // DEMO calls this back over HTTP from inside the server, so a stale localhost default does not
+  // fail loudly on a deploy — it refuses the connection from within the function. Vercel injects
+  // its own host, so fall through to that before ever assuming localhost.
+  get APP_URL() {
+    const configured = process.env.NEXT_PUBLIC_APP_URL;
+    if (configured) return configured;
+    const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+    return vercelHost ? `https://${vercelHost}` : "http://localhost:3000";
+  },
   get GROQ_API_KEY() { return process.env.GROQ_API_KEY ?? ""; },
   get USE_MOCKS() { return process.env.USE_MOCKS === "1"; },
 };

@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Agent Spend Policy Guard - policy-enforcement gateway for x402 autonomous payments",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -29,6 +32,7 @@
     "@x402/fetch": "2.22.0",
     "@x402/next": "2.22.0",
     "ai": "^7.0.66",
+    "algosdk": "^3.7.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.38.4",
@@ -51,7 +55,6 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "algosdk": "^3.6.0",
     "drizzle-kit": "^0.30.6",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",

@@ -3,9 +3,29 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 process.env.GUARD_HMAC_SECRET ??= "test-only-secret";
-process.env.AGENT_WALLET_PRIVATE_KEY ??= "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+process.env.AVM_PRIVATE_KEY ??= "ASdQfaLIBs5ujxlKf1HO3mkzmIl+I1T+9Yn1rDLCsYHXjURdAvI/9C5cv4PcpdNh63PdwRauu6Y06IKqBfvAJg==";
 
-import { CAPTURED_REQUIRED, CAPTURED_RESPONSE, SETTLED_TX_HASH, asHeader } from "@/payments/tests/fixtures";
+/** Structural, so it needs no import inside the hoisted block. Enough to assert what was signed. */
+type SignedOffer = { accepts: Array<{ payTo: string; amount: string; network: string }> };
+const adapterStub = vi.hoisted(() => ({
+  createPaymentSignature: vi.fn<(paymentRequired: SignedOffer, signer: unknown) => Promise<string>>(
+    async () => "c3R1Yi1zaWduYXR1cmU=",
+  ),
+}));
+vi.mock("@/payments/x402/adapter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/payments/x402/adapter")>()),
+  createPaymentSignature: adapterStub.createPaymentSignature,
+}));
+
+import {
+  AVM_CAPTURED_REQUIRED,
+  AVM_CAPTURED_RESPONSE,
+  AVM_SETTLED_TX_ID,
+  CAPTURED_REQUIRED,
+  CAPTURED_RESPONSE,
+  SETTLED_TX_HASH,
+  asHeader,
+} from "@/payments/tests/fixtures";
 import { HEADER } from "@/payments/x402/headers";
 import type { EvaluationResult } from "@/shared/types";
 
@@ -15,7 +35,7 @@ const core = vi.hoisted(() => ({
   commitBudget: vi.fn(),
   releaseBudget: vi.fn(),
 }));
-vi.mock("@/core/mock", () => core);
+vi.mock("@/core", () => core);
 
 const forward = vi.hoisted(() => ({ forwardToMerchant: vi.fn(), isStrippedHeader: vi.fn() }));
 vi.mock("@/payments/gateway/forward", () => forward);
@@ -31,6 +51,13 @@ const ALLOW: EvaluationResult = {
 const REQUEST = { agentId: "agt_researchbot", url: "http://localhost:3001/api/gw/poc-seller", method: "POST" };
 
 const quoted = () => new Response(null, { status: 402, headers: { [HEADER.required]: CAPTURED_REQUIRED } });
+
+// The Algorand capture, served from the host its resource.url names so the signer's merchant
+// check agrees. Used by the rail test below; the rest stay on the EVM capture on purpose, to keep
+// proving that none of the guard's checks depend on which chain the money moves over.
+const AVM_REQUEST = { agentId: "agt_researchbot", url: "https://x402.goplausible.xyz/examples/weather", method: "GET" };
+const avmQuoted = () => new Response(null, { status: 402, headers: { [HEADER.required]: AVM_CAPTURED_REQUIRED } });
+const avmSettled = () => new Response(JSON.stringify({ forecast: {} }), { status: 200, headers: { [HEADER.response]: AVM_CAPTURED_RESPONSE } });
 const settled = () => new Response(JSON.stringify({ results: [] }), { status: 200, headers: { [HEADER.response]: CAPTURED_RESPONSE } });
 
 /** First call is the unpaid probe, second is the paid retry. */
@@ -85,6 +112,21 @@ describe("runGuardedRequest — happy path", () => {
   });
 });
 
+describe("runGuardedRequest — Algorand rail", () => {
+  it("settles and links the transaction to Lora, not to a Base explorer", async () => {
+    merchantReplies(avmQuoted, avmSettled);
+
+    const result = await runGuardedRequest(AVM_REQUEST);
+
+    expect(result.status).toBe("SETTLED");
+    expect(result.onChain).toEqual({ signed: true, txHash: AVM_SETTLED_TX_ID });
+    // A BaseScan link for an Algorand transaction renders as "not found", which reads to a judge
+    // as a failed payment. Wrong explorer is worse than no explorer.
+    expect(result.payment?.explorerUrl).toBe(`https://lora.algokit.io/testnet/transaction/${AVM_SETTLED_TX_ID}`);
+    expect(core.commitBudget).toHaveBeenCalledOnce();
+  });
+});
+
 describe("runGuardedRequest — nothing is signed before ALLOW", () => {
   it("blocks without reserving or signing", async () => {
     forward.forwardToMerchant.mockResolvedValueOnce(quoted());
@@ -108,6 +150,24 @@ describe("runGuardedRequest — nothing is signed before ALLOW", () => {
     expect(result.status).toBe("PENDING_APPROVAL");
     expect(result.onChain.signed).toBe(false);
     expect(core.reserveBudget).not.toHaveBeenCalled();
+  });
+
+  // The real ledger throws instead of returning a decision when a window has no room. That is a
+  // policy outcome, so it has to read as BLOCKED here — a FAILED would claim the guard broke.
+  it("blocks, and signs nothing, when the ledger refuses the reservation", async () => {
+    forward.forwardToMerchant.mockResolvedValueOnce(quoted());
+    core.reserveBudget.mockRejectedValueOnce(
+      Object.assign(new Error("This payment would take daily spend over the $5.00 daily budget."), { code: "BUDGET_EXCEEDED" }),
+    );
+
+    const result = await runGuardedRequest(REQUEST);
+
+    expect(result.status).toBe("BLOCKED");
+    expect(result.onChain).toEqual({ signed: false, txHash: null });
+    expect(result.reasons[0].code).toBe("BUDGET_EXCEEDED");
+    // Nothing was reserved, so nothing may be released — a stray release would credit a phantom.
+    expect(core.releaseBudget).not.toHaveBeenCalled();
+    expect(forward.forwardToMerchant).toHaveBeenCalledOnce();
   });
 
   it("blocks on the caller's own maxAmountUsd before CORE is even asked", async () => {
@@ -163,5 +223,49 @@ describe("runGuardedRequest — every failure path releases the reservation", ()
     expect(core.releaseBudget).toHaveBeenCalledOnce();
     expect(core.commitBudget).not.toHaveBeenCalled();
     expect(forward.forwardToMerchant).toHaveBeenCalledOnce();
+  });
+});
+
+// A payment held for human review is judged again on the retry, and CORE answers with the id of the
+// row the reviewer approved. Everything the gateway writes has to follow that id: put the
+// reservation or the tx hash on the fresh intent instead and the approvals queue shows an approved
+// payment that never settled, next to an orphan row holding the hash.
+describe("runGuardedRequest — resumed after human approval", () => {
+  const APPROVED_INTENT_ID = "int_approved_by_a_human";
+
+  beforeEach(() => {
+    core.evaluatePayment.mockResolvedValue({ ...ALLOW, intentId: APPROVED_INTENT_ID });
+  });
+
+  it("reserves and reports against the approved intent, not the retry's own", async () => {
+    merchantReplies(quoted, settled);
+
+    const result = await runGuardedRequest({ ...REQUEST, idempotencyKey: APPROVED_INTENT_ID });
+
+    expect(result.status).toBe("SETTLED");
+    expect(result.intentId).toBe(APPROVED_INTENT_ID);
+    // commitBudget stamps the tx hash by way of the reservation, so this is what puts the hash on
+    // the approved row.
+    expect(core.reserveBudget).toHaveBeenCalledWith("agt_researchbot", APPROVED_INTENT_ID, 10_000n);
+  });
+
+  it("carries the approved id onto a failure too, so the release is traceable to it", async () => {
+    merchantReplies(quoted, () => new Response("gone", { status: 503 }));
+
+    const result = await runGuardedRequest({ ...REQUEST, idempotencyKey: APPROVED_INTENT_ID });
+
+    expect(result.status).toBe("FAILED");
+    expect(result.intentId).toBe(APPROVED_INTENT_ID);
+    expect(core.releaseBudget).toHaveBeenCalledOnce();
+  });
+
+  it("still uses the gateway's own intent when CORE names no other", async () => {
+    core.evaluatePayment.mockResolvedValue(ALLOW);
+    merchantReplies(quoted, settled);
+
+    const result = await runGuardedRequest(REQUEST);
+
+    expect(result.intentId).toMatch(/^int_/);
+    expect(core.reserveBudget).toHaveBeenCalledWith("agt_researchbot", result.intentId, 10_000n);
   });
 });

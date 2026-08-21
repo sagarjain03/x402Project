@@ -22,9 +22,9 @@ const boundaries = [
   },
   {
     // If the x402 SDK surface differs from the docs, exactly one file changes.
-    // The throwaway seller is exempt: sellers use @x402/next, which the buyer-side adapter does not wrap.
+    // Sellers are exempt: sellers use @x402/next, which the buyer-side adapter does not wrap.
     files: ["src/**/*.ts", "src/**/*.tsx"],
-    ignores: ["src/payments/x402/**", "src/payments/scripts/poc-seller.ts"],
+    ignores: ["src/payments/x402/**", "src/demo/sandbox/**"],
     rules: {
       "no-restricted-imports": ["error", {
         patterns: [{
@@ -59,7 +59,7 @@ const boundaries = [
     // may touch the SDK. Both bans live in ONE block on purpose: flat config REPLACES rule options
     // rather than merging them, so splitting these across two blocks silently drops the first.
     files: ["src/payments/**"],
-    ignores: ["src/payments/x402/**", "src/payments/scripts/poc-seller.ts"],
+    ignores: ["src/payments/x402/**"],
     rules: {
       "no-restricted-imports": ["error", {
         patterns: [
@@ -77,7 +77,7 @@ const boundaries = [
   },
   {
     // The SDK boundary files are exempt from the x402 ban above, but not from the core-internals one.
-    files: ["src/payments/x402/**", "src/payments/scripts/poc-seller.ts"],
+    files: ["src/payments/x402/**"],
     rules: {
       "no-restricted-imports": ["error", {
         patterns: [{

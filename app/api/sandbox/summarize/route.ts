@@ -1,4 +1,3 @@
-/** OWNER: DEMO - paid x402 seller, $0.02. */
+/** OWNER: DEMO - paid x402 seller, $0.05. */
 export const runtime = "nodejs";
-export { POST } from "@/demo/handlers/sandbox-summarize";
-
+export { GET, POST } from "@/demo/handlers/sandbox-summarize";

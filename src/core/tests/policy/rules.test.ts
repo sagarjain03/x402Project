@@ -1,6 +1,7 @@
 // OWNER: CORE. Both directions for each of the 10 blocking rules — one input that trips it, one that
 // passes it. Rules 11-13 are risk tiering and belong to the engine; they land in engine.test.ts at C4.
 import { describe, expect, it } from "vitest";
+import { ALGORAND_TESTNET_NETWORK_ID, ALGORAND_TESTNET_USDC_ASA } from "@/shared/env";
 import {
   BLOCKING_RULES,
   BLOCKING_RULE_NAMES,
@@ -39,14 +40,14 @@ describe("policy rules", () => {
     const ctx = makeContext({ intent: makeIntent({ network: "ethereum-mainnet" }) });
     const reason = ruleRailAllowed(ctx);
     expect(reason?.code).toBe("NETWORK_NOT_ALLOWED");
-    expect(reason?.expected).toEqual(["base-sepolia"]);
+    expect(reason?.expected).toEqual([ALGORAND_TESTNET_NETWORK_ID]);
     expect(ruleRailAllowed(makeContext())).toBeNull();
   });
 
   it("2b BLOCKs a non-allowlisted asset", () => {
     const ctx = makeContext({ intent: makeIntent({ asset: "DAI" }) });
     expect(ruleRailAllowed(ctx)?.code).toBe("ASSET_NOT_ALLOWED");
-    expect(ruleRailAllowed(makeContext({ intent: makeIntent({ asset: "USDC" }) }))).toBeNull();
+    expect(ruleRailAllowed(makeContext({ intent: makeIntent({ asset: ALGORAND_TESTNET_USDC_ASA }) }))).toBeNull();
   });
 
   it("3  BLOCKs a blocklisted merchant", () => {

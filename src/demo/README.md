@@ -102,9 +102,9 @@ agent ignores the prompt entirely and the Guard still stops it. Say this explici
 |---|---|---|---|
 | D1 | Normal $0.01 search | 🟢 ALLOW | tx hash on BaseScan |
 | D2 | $2.00 premium report | 🔴 BLOCK | reason chip, **no tx hash** |
-| D3 | 20 calls in 10 s | 🟢 x10 then 🔴 | velocity meter maxes out |
+| D3 | VelocityBot: 20 searches in one burst | 🟢 x5 then 🔴 | velocity meter maxes out |
 | D4 | Unallowlisted merchant | 🔴 BLOCK | merchant allowlist reason |
-| D5 | Repeated $0.10 to the daily cap | 🔴 BLOCK | budget gauge hits 100 % |
+| D5 | BudgetBot: one call, allowance already spent | 🔴 BLOCK | budget gauge already at 100 % |
 | D6 | **Prompt injection, 1000 x $2 ordered** | contained | attempted $2,000, spent $0.03 |
 | D7 | $0.50 payment | 🟡 HOLD -> approve | payment resumes and settles |
 

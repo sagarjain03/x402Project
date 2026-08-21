@@ -93,6 +93,9 @@ export function evaluate(ctx: EvaluationContext): EvaluationResult {
 
       if (!reviewable) return finish("BLOCK", [failure], score, signals);
 
+      // The reviewer saw this merchant and said yes. Holding it again would queue it forever.
+      if (ctx.approvalGranted) return finish("ALLOW", [], score, signals);
+
       return finish("HOLD", [failure, {
         code: "APPROVAL_REQUIRED",
         rule: "merchant.unknownMerchantAction",
@@ -105,8 +108,10 @@ export function evaluate(ctx: EvaluationContext): EvaluationResult {
       return finish("BLOCK", [riskTooHighReason(score, ctx.policy.rules.risk.riskBlockScore)], score, signals);
     }
 
+    // Every blocking rule above still applies to an approved payment — budget, velocity and the
+    // per-transaction ceiling can all have moved while it waited. Only the review gate is spent.
     const holds = holdReasons(ctx, score);
-    if (holds.length > 0) return finish("HOLD", holds, score, signals);
+    if (holds.length > 0 && !ctx.approvalGranted) return finish("HOLD", holds, score, signals);
 
     return finish("ALLOW", [], score, signals);
   } catch {

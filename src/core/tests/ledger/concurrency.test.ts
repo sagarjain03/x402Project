@@ -54,7 +54,7 @@ async function makeIntents(count: number): Promise<string[]> {
       agentId,
       amountMinor: toMinor("0.60"),
       asset: "USDC",
-      network: "base-sepolia",
+      network: "algorand-testnet",
       recipient: "0x9a2B4c6D8e0F1a3B5c7D9e1F2a4B6c8D0e2F4a6B",
       merchantDomain: "localhost:3000",
       resource: "POST /api/sandbox/search",

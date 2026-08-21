@@ -44,6 +44,16 @@ export async function listAgents(): Promise<AgentRow[]> {
   return getDb().select().from(schema.agents).orderBy(asc(schema.agents.name));
 }
 
+/** Names are unique in the schema; checked here so the caller gets a field error, not a 500. */
+export async function agentNameTaken(name: string): Promise<boolean> {
+  const [row] = await getDb()
+    .select({ id: schema.agents.id })
+    .from(schema.agents)
+    .where(eq(schema.agents.name, name))
+    .limit(1);
+  return Boolean(row);
+}
+
 export async function createAgent(input: NewAgentRow): Promise<AgentRow> {
   const [agent] = await getDb().insert(schema.agents).values(input).returning();
   return agent;

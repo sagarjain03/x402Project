@@ -8,6 +8,7 @@ import {
   encodePaymentSignatureHeader,
 } from "@x402/core/http";
 import type { PaymentPayload, PaymentRequired } from "@x402/core/types";
+import { AVM_TX_ID, EVM_TX_HASH, isAddress } from "@/shared/address";
 import type { ErrorCode } from "@/shared/errors";
 import type { SettlementResult } from "@/shared/types";
 
@@ -29,18 +30,39 @@ export class PaymentHeaderError extends Error {
 
 // The SDK decoders check base64 shape and JSON.parse, nothing more — an empty object decodes
 // happily. These schemas are what makes an unreadable offer a BLOCK (../../CLAUDE.md rule 2).
+// Both rails are accepted for as long as they coexist. Algorand addresses and transaction ids
+// are base32 over the alphabet A-Z2-7 — 58 characters for an address, 52 for a transaction id.
+// These stay exact shapes rather than z.string(): a payTo we cannot recognise is a payTo we
+// cannot pin, and CLAUDE.md rule 2 says that resolves to BLOCK, not to "probably fine".
+// Both stay recognised after A3 on purpose. An EVM offer can no longer be signed — the adapter
+// registers no EVM scheme — and the policy engine refuses it by rail. Keeping it *readable* means
+// that refusal surfaces as NETWORK_NOT_ALLOWED, a decision, instead of a malformed-header error.
+
+
+/** Exported so intent/build.ts can enforce the same rule without keeping a second copy of it. */
+export function isRecipientAddress(value: string): boolean {
+  return isAddress(value);
+}
+
 const requirementsSchema = z.object({
   scheme: z.string().min(1),
   network: z.string().min(1),
   // Integer minor units as a string. A float here would mean the merchant is quoting dollars.
   amount: z.string().regex(/^\d+$/),
   asset: z.string().min(1),
-  payTo: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
+  // Required by the v2 spec. Some third-party sellers omit it on rails they do not really
+  // support; those offers are rejected rather than signed with no recipient to pin.
+  payTo: z.string().refine(isRecipientAddress),
 });
 
+// The envelope and the individual offers are validated separately. A seller may quote several
+// rails at once and get one of them wrong — the live Algorand reference seller quotes three and
+// leaves payTo off two of them. Refusing the whole envelope for a rail we were never going to use
+// would throw away a perfectly payable offer. Deny-by-default is unharmed: an entry that fails
+// validation is discarded, never repaired, so nothing unvalidated can reach the signer.
 const paymentRequiredSchema = z.object({
   x402Version: z.number().int().positive(),
-  accepts: z.array(requirementsSchema).min(1),
+  accepts: z.array(z.unknown()).min(1),
 });
 
 const paymentPayloadSchema = z.object({
@@ -54,8 +76,6 @@ const settleResponseSchema = z.object({
   network: z.string().min(1),
   errorReason: z.string().optional(),
 });
-
-const TX_HASH = /^0x[0-9a-fA-F]{64}$/;
 
 function decodeOrThrow(
   headerValue: string,
@@ -73,10 +93,17 @@ function decodeOrThrow(
 
 export function decodePaymentRequired(headerValue: string): PaymentRequired {
   const raw = decodeOrThrow(headerValue, HEADER.required, "INVALID_PAYMENT_REQUIREMENTS", decodePaymentRequiredHeader);
-  if (!paymentRequiredSchema.safeParse(raw).success) {
+  const envelope = paymentRequiredSchema.safeParse(raw);
+  if (!envelope.success) {
     throw new PaymentHeaderError("INVALID_PAYMENT_REQUIREMENTS", `${HEADER.required} header is not a usable payment offer.`);
   }
-  return raw as PaymentRequired;
+
+  const accepts = envelope.data.accepts.filter((offer) => requirementsSchema.safeParse(offer).success);
+  if (accepts.length === 0) {
+    throw new PaymentHeaderError("INVALID_PAYMENT_REQUIREMENTS", `${HEADER.required} header quotes no usable payment rail.`);
+  }
+
+  return { ...(raw as PaymentRequired), accepts } as PaymentRequired;
 }
 
 export function encodePaymentSignature(payload: PaymentPayload): string {
@@ -102,9 +129,9 @@ export function decodePaymentResponse(headerValue: string): SettlementResult {
   if (!success) {
     throw new PaymentHeaderError("SETTLEMENT_FAILED", errorReason ?? "The facilitator reported settlement failure.");
   }
-  if (!TX_HASH.test(transaction)) {
+  if (!EVM_TX_HASH.test(transaction) && !AVM_TX_ID.test(transaction)) {
     throw new PaymentHeaderError("SETTLEMENT_FAILED", `Settlement reported success without a usable transaction hash.`);
   }
   // The header carries no timestamp, so settledAt is when we read the confirmation.
-  return { txHash: transaction as `0x${string}`, settledAt: new Date(), raw };
+  return { txHash: transaction, settledAt: new Date(), raw };
 }

@@ -20,7 +20,7 @@ git pull origin main
 npm install
 cp .env.example .env.local        # then set DATABASE_URL
 npm run db:push
-npm run db:seed                   # must print: seeded: 2 agents, 4 policies, 40 intents...
+npm run db:seed                   # must print: seeded: 4 agents, 6 policies, 52 intents...
 npm test                          # must be green before you write a line
 ```
 

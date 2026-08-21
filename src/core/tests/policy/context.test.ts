@@ -2,12 +2,14 @@
 // decision — engine.test.ts covers that — but that it is recorded before it returns, and that every
 // failure path is a BLOCK. Needs a real Postgres.
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { ALGORAND_TESTNET_NETWORK_ID, ALGORAND_TESTNET_USDC_ASA } from "@/shared/env";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { verifyChain } from "@/core/audit/chain";
 import { subscribe } from "@/core/audit/events";
 import { getDb, schema } from "@/core/db";
+import { actionApproval } from "@/core/db/queries";
 import { evaluatePayment } from "@/core/policy/context";
 import { newId } from "@/shared/ids";
 import { toMinor } from "@/shared/money";
@@ -25,8 +27,8 @@ function makeIntent(overrides: Partial<PaymentIntent> = {}): PaymentIntent {
     intentId,
     agentId,
     amountMinor: toMinor("0.02"),
-    asset: "USDC",
-    network: "base-sepolia",
+    asset: ALGORAND_TESTNET_USDC_ASA,
+    network: ALGORAND_TESTNET_NETWORK_ID,
     recipient: MERCHANT_WALLET,
     merchant: SANDBOX,
     resource: "POST /api/sandbox/search",
@@ -171,10 +173,12 @@ describe.skipIf(!hasDatabase)("evaluatePayment", () => {
 
   it("refuses a reused idempotency key that carries a different body", async () => {
     const key = `idem_${newId("intent")}`;
-    await evaluatePayment({ intent: makeIntent(), idempotencyKey: key });
+    await evaluatePayment({ intent: makeIntent({ amountMinor: toMinor("0.02") }), idempotencyKey: key });
 
+    // Varying a term, not the hash: intentHash carries a per-attempt nonce, so it differs on every
+    // genuine retry too and cannot be what tells a retry apart from a swapped payment.
     const tampered = await evaluatePayment({
-      intent: makeIntent({ intentHash: "f".repeat(64) }),
+      intent: makeIntent({ amountMinor: toMinor("0.90") }),
       idempotencyKey: key,
     });
     expect(tampered.decision).toBe("BLOCK");
@@ -237,5 +241,123 @@ describe.skipIf(!hasDatabase)("evaluatePayment", () => {
       const result = await evaluatePayment({ intent: makeIntent({ agentId: newId("agent") }) });
       expect(result.decision).toBe("BLOCK");
     });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// D7: HOLD -> a human approves -> the agent retries -> the SAME intent settles.
+// Its own agent id: these intents would otherwise count toward the velocity window the tests
+// above share, and a resume test that trips rule 9 would be testing the wrong thing.
+// ---------------------------------------------------------------------------------------------
+describe.skipIf(!hasDatabase)("evaluatePayment · resume after approval", () => {
+  const resumeAgentId = newId("agent");
+
+  function heldIntent(overrides: Partial<PaymentIntent> = {}): PaymentIntent {
+    // A fresh id, a fresh nonce and therefore a fresh intentHash on every call — exactly what the
+    // gateway produces on a retry, and what made hash-based idempotency reject every genuine one.
+    return makeIntent({ agentId: resumeAgentId, amountMinor: toMinor("0.50"), ...overrides });
+  }
+
+  beforeAll(async () => {
+    await getDb().insert(schema.agents).values({
+      id: resumeAgentId,
+      name: `ResumeBot ${resumeAgentId}`,
+      status: "ACTIVE",
+      apiKeyHash: `hash_${resumeAgentId}`,
+      walletAllowanceCapMinor: toMinor("25.00"),
+      walletFundedMinor: toMinor("10.00"),
+    });
+    await getDb().insert(schema.policies).values({
+      id: newId("policy"),
+      agentId: resumeAgentId,
+      version: 1,
+      isActive: true,
+      maxPerTransactionMinor: toMinor("1.00"),
+      hourlyBudgetMinor: toMinor("1.00"),
+      dailyBudgetMinor: toMinor("5.00"),
+      monthlyBudgetMinor: toMinor("50.00"),
+      maxTxPerMinute: 10,
+      maxTxPerHour: 100,
+      rules: makePolicyRules(),
+    });
+  });
+
+  afterAll(async () => {
+    await getDb().execute(sql`delete from agents where id = ${resumeAgentId}`);
+  });
+
+  it("settles the intent the reviewer approved, not a fresh copy of it", async () => {
+    const first = heldIntent();
+    const held = await evaluatePayment({ intent: first });
+    expect(held.decision).toBe("HOLD");
+    expect(held.intentId).toBe(first.intentId);
+
+    await actionApproval(first.intentId, "APPROVED", "reviewer@test");
+
+    // The agent retries with the id it was handed in the 202. Different intent object entirely.
+    const retry = heldIntent({ reason: "resume after approval" });
+    const resumed = await evaluatePayment({ intent: retry, idempotencyKey: first.intentId });
+
+    expect(resumed.decision).toBe("ALLOW");
+    expect(resumed.intentId).toBe(first.intentId);
+
+    const row = await intentRow(first.intentId);
+    expect(row.decision).toBe("ALLOW");
+    // ALLOW leaves it mid-flight for the ledger and the signer; the approval is not undone.
+    expect(row.state).toBe("EVALUATING");
+    expect(row.approval_status).toBe("APPROVED");
+
+    // The retry never became a second row — one approval, one payment, one record.
+    expect(await intentRow(retry.intentId)).toBeUndefined();
+  });
+
+  it("refuses to resume when the merchant re-quotes a different price", async () => {
+    const first = heldIntent();
+    expect((await evaluatePayment({ intent: first })).decision).toBe("HOLD");
+    await actionApproval(first.intentId, "APPROVED", "reviewer@test");
+
+    // $0.50 was approved. $0.90 is a different payment, whatever the key says.
+    const reQuoted = heldIntent({ amountMinor: toMinor("0.90") });
+    const result = await evaluatePayment({ intent: reQuoted, idempotencyKey: first.intentId });
+
+    expect(result.decision).toBe("BLOCK");
+    expect(result.reasons[0].code).toBe("IDEMPOTENCY_CONFLICT");
+    expect(await intentRow(first.intentId)).toMatchObject({ decision: "HOLD" });
+  });
+
+  it("replays a decision that is still awaiting review instead of queueing a second one", async () => {
+    const first = heldIntent();
+    await evaluatePayment({ intent: first });
+
+    const retry = heldIntent();
+    const replayed = await evaluatePayment({ intent: retry, idempotencyKey: first.intentId });
+
+    expect(replayed.decision).toBe("HOLD");
+    expect(replayed.intentId).toBe(first.intentId);
+    expect(await intentRow(retry.intentId)).toBeUndefined();
+  });
+
+  it("refuses to sign a second payment for a key that already settled", async () => {
+    const first = heldIntent({ amountMinor: toMinor("0.02") });
+    expect((await evaluatePayment({ intent: first })).decision).toBe("ALLOW");
+
+    // Stand in for the settlement commitBudget would stamp.
+    await getDb().execute(sql`update payment_intents set tx_hash = 'ALREADYSETTLED' where id = ${first.intentId}`);
+
+    const retry = heldIntent({ amountMinor: toMinor("0.02") });
+    const result = await evaluatePayment({ intent: retry, idempotencyKey: first.intentId });
+
+    expect(result.decision).toBe("BLOCK");
+    expect(result.reasons[0].code).toBe("IDEMPOTENCY_CONFLICT");
+  });
+
+  it("stores the intent's own id as its idempotency key, which is what makes a resume possible", async () => {
+    const intent = heldIntent({ amountMinor: toMinor("0.02") });
+    await evaluatePayment({ intent });
+
+    const [row] = (await getDb().execute(sql`
+      select idempotency_key from payment_intents where id = ${intent.intentId}
+    `)) as unknown as Record<string, unknown>[];
+    expect(row.idempotency_key).toBe(intent.intentId);
   });
 });

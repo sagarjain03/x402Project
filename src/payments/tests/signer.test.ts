@@ -4,14 +4,26 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 process.env.GUARD_HMAC_SECRET ??= "test-only-secret";
 // Throwaway anvil account 0. Signing is offline typed data, so no network and no funds are needed.
-process.env.AGENT_WALLET_PRIVATE_KEY ??= "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+process.env.AVM_PRIVATE_KEY ??= "ASdQfaLIBs5ujxlKf1HO3mkzmIl+I1T+9Yn1rDLCsYHXjURdAvI/9C5cv4PcpdNh63PdwRauu6Y06IKqBfvAJg==";
+
+/** Structural, so it needs no import inside the hoisted block. Enough to assert what was signed. */
+type SignedOffer = { accepts: Array<{ payTo: string; amount: string; network: string }> };
+const adapterStub = vi.hoisted(() => ({
+  createPaymentSignature: vi.fn<(paymentRequired: SignedOffer, signer: unknown) => Promise<string>>(
+    async () => "c3R1Yi1zaWduYXR1cmU=",
+  ),
+}));
+vi.mock("@/payments/x402/adapter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/payments/x402/adapter")>()),
+  createPaymentSignature: adapterStub.createPaymentSignature,
+}));
 
 import { buildIntentFromRequirements } from "@/payments/intent/build";
-import { CAPTURED_REQUIRED } from "@/payments/tests/fixtures";
+import { AVM_CAPTURED_REQUIRED, AVM_NETWORK, AVM_PAY_TO, CAPTURED_REQUIRED } from "@/payments/tests/fixtures";
 import { mintAllowToken } from "@/payments/wallet/allowToken";
 import { signPaymentPayload } from "@/payments/wallet/signer";
 import { readPaymentRequired, type PaymentRequired } from "@/payments/x402/adapter";
-import { HEADER, decodePaymentSignature } from "@/payments/x402/headers";
+import { HEADER } from "@/payments/x402/headers";
 import type { PaymentIntent } from "@/shared/types";
 
 let OFFER: PaymentRequired;
@@ -38,15 +50,16 @@ const withOffer = (patch: Record<string, unknown>): PaymentRequired =>
 afterEach(() => vi.useRealTimers());
 
 describe("signPaymentPayload", () => {
-  it("signs when the token is valid and every term still matches", async () => {
+  it("hands the SDK exactly the approved offer, and only after every check passed", async () => {
     const intent = approvedIntent();
     const { token } = mintAllowToken(intent.intentHash, "evl_test");
 
-    const header = await signPaymentPayload({ intent, paymentRequired: OFFER, allowToken: token });
-    const authorization = decodePaymentSignature(header).payload.authorization as Record<string, string>;
+    await signPaymentPayload({ intent, paymentRequired: OFFER, allowToken: token });
 
-    expect(authorization.to).toBe(intent.recipient);
-    expect(authorization.value).toBe(intent.amountMinor.toString());
+    const [signed] = adapterStub.createPaymentSignature.mock.calls.at(-1)!;
+    expect(signed.accepts).toHaveLength(1);
+    expect(signed.accepts[0].payTo).toBe(intent.recipient);
+    expect(signed.accepts[0].amount).toBe(intent.amountMinor.toString());
   });
 
   it("refuses to sign without a valid allowToken", async () => {
@@ -74,17 +87,18 @@ describe("signPaymentPayload", () => {
       .rejects.toThrow(/No offer on the wire matches/);
   });
 
-  it("refuses when a decoy offer is appended alongside the approved one", async () => {
+  it("strips a decoy offer appended alongside the approved one", async () => {
     const intent = approvedIntent();
     const { token } = mintAllowToken(intent.intentHash, "evl_test");
     const decoy = { ...OFFER.accepts[0], payTo: "0x000000000000000000000000000000000000dEaD" };
     const both = { ...OFFER, accepts: [decoy, OFFER.accepts[0]] } as PaymentRequired;
 
-    const header = await signPaymentPayload({ intent, paymentRequired: both, allowToken: token });
-    const authorization = decodePaymentSignature(header).payload.authorization as Record<string, string>;
+    await signPaymentPayload({ intent, paymentRequired: both, allowToken: token });
 
     // narrowToOffer must have removed the decoy before the SDK's selector ever saw it.
-    expect(authorization.to).toBe(intent.recipient);
+    const [signed] = adapterStub.createPaymentSignature.mock.calls.at(-1)!;
+    expect(signed.accepts).toHaveLength(1);
+    expect(signed.accepts[0].payTo).toBe(intent.recipient);
   });
 
   it("refuses a replayed allowToken", async () => {
@@ -131,5 +145,67 @@ describe("signPaymentPayload", () => {
 
     await expect(signPaymentPayload({ intent, paymentRequired: elsewhere, allowToken: token }))
       .rejects.toThrow(/but localhost:3001 was approved/);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Phase A0: the same T9 refusals with an Algorand intent. These exercise the checks that run
+// BEFORE any key is touched, so they need no AVM signer — that arrives with phase A2.
+// ---------------------------------------------------------------------------------------------
+
+describe("signPaymentPayload — Algorand recipients", () => {
+  const avmOffer = () =>
+    readPaymentRequired(
+      new Response(null, { status: 402, headers: { [HEADER.required]: AVM_CAPTURED_REQUIRED } }),
+    )!;
+
+  const avmIntent = (): PaymentIntent =>
+    buildIntentFromRequirements({
+      agentId: "agt_researchbot",
+      requirements: avmOffer().accepts[0],
+      requestUrl: "https://x402.goplausible.xyz/examples/weather",
+      method: "get",
+      reason: "algorand signer test",
+    });
+
+  it("carries the base32 recipient into the intent without mangling it", () => {
+    const intent = avmIntent();
+    expect(intent.recipient).toBe(AVM_PAY_TO);
+    expect(intent.network).toBe(AVM_NETWORK);
+    expect(intent.asset).toBe("10458941");
+  });
+
+  it("refuses when the wire quotes a different Algorand recipient than was approved", async () => {
+    // The whole of threat T9 in one case: same amount, same asset, same network, one swapped
+    // address. Refusal happens before the allowToken is consumed and before anything is signed.
+    const intent = avmIntent();
+    const { token } = mintAllowToken(intent.intentHash, "evl_test");
+    const swapped = {
+      ...avmOffer(),
+      accepts: [{ ...avmOffer().accepts[0], payTo: "ZMFK2OI7ZBD2U27ISERZC4S6LKM6WMFJPZQ4MYNJDZ2VNBNMBA67RA22AB" }],
+    } as PaymentRequired;
+
+    await expect(signPaymentPayload({ intent, paymentRequired: swapped, allowToken: token }))
+      .rejects.toThrow(/No offer on the wire matches/);
+  });
+
+  it("refuses when the amount was raised after approval", async () => {
+    const intent = avmIntent();
+    const { token } = mintAllowToken(intent.intentHash, "evl_test");
+    const dearer = {
+      ...avmOffer(),
+      accepts: [{ ...avmOffer().accepts[0], amount: "20000" }],
+    } as PaymentRequired;
+
+    await expect(signPaymentPayload({ intent, paymentRequired: dearer, allowToken: token }))
+      .rejects.toThrow(/No offer on the wire matches/);
+  });
+
+  it("refuses when the intent no longer hashes to its own intentHash", async () => {
+    const intent = { ...avmIntent(), intentHash: "0".repeat(64) };
+    const { token } = mintAllowToken(intent.intentHash, "evl_test");
+
+    await expect(signPaymentPayload({ intent, paymentRequired: avmOffer(), allowToken: token }))
+      .rejects.toThrow(/do not match its own intentHash/);
   });
 });

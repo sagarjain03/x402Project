@@ -1,6 +1,6 @@
 // OWNER: PAY. The main flow: forward -> 402 -> evaluate -> reserve -> sign -> retry -> settle -> commit.
 // Once a reservation exists, every exit path releases it. A leak silently shrinks the agent's budget.
-import { commitBudget, evaluatePayment, releaseBudget, reserveBudget } from "@/core/mock";
+import { commitBudget, evaluatePayment, releaseBudget, reserveBudget } from "@/core";
 import { buildIntentFromRequirements, resolveTarget } from "@/payments/intent/build";
 import { forwardToMerchant } from "@/payments/gateway/forward";
 import { mintAllowToken } from "@/payments/wallet/allowToken";
@@ -10,7 +10,7 @@ import { newId } from "@/shared/ids";
 import { toMinor, toUsd } from "@/shared/money";
 import type { Decision, PaymentIntent, Reason } from "@/shared/types";
 
-const EXPLORER = "https://sepolia.basescan.org/tx/";
+import { explorerTxUrl } from "@/shared/explorer";
 
 export interface GuardedRequestInput {
   agentId: string;
@@ -31,7 +31,7 @@ export interface GuardedRequestResult {
   merchant: string;
   resource: string;
   amountUsd: string | null;
-  payment?: { amount: string; txHash: `0x${string}`; explorerUrl: string; settledAt: string };
+  payment?: { amount: string; txHash: string; explorerUrl: string; settledAt: string };
   onChain: { signed: boolean; txHash: string | null };
   response?: { status: number; headers: Record<string, string>; body: unknown };
 }
@@ -120,11 +120,18 @@ export async function runGuardedRequest(input: GuardedRequestInput): Promise<Gua
     };
   }
 
-  const evaluation = await evaluatePayment();
+  const evaluation = await evaluatePayment({ intent, idempotencyKey: input.idempotencyKey });
+
+  // A payment resumed after human approval is judged against the row the reviewer approved, so the
+  // reservation and the tx hash have to land there too — otherwise the approvals queue shows an
+  // approved payment with no settlement, and a second orphan row holds the hash.
+  // The signature still binds the *fresh* quote: intent.intentHash is per-attempt, and must be.
+  const intentId = evaluation.intentId ?? intent.intentId;
+
   if (evaluation.decision !== "ALLOW") {
     return {
       status: evaluation.decision === "HOLD" ? "PENDING_APPROVAL" : "BLOCKED",
-      intentId: intent.intentId,
+      intentId,
       ...target,
       amountUsd: toUsd(intent.amountMinor),
       decision: evaluation.decision,
@@ -133,9 +140,24 @@ export async function runGuardedRequest(input: GuardedRequestInput): Promise<Gua
     };
   }
 
-  // TODO(PAY): C7 must capture the returned reservationId and pass it to commit/release, which the
-  // real @/core API requires and the mock does not accept. See blocker B7.
-  await reserveBudget(intent.intentId, intent.amountMinor);
+  // reserveBudget throws rather than returning a decision when a window has no room. That is still
+  // a policy outcome, not a fault, so it has to leave here as BLOCKED — a 500 would tell the agent
+  // the guard broke when the guard in fact worked. No reservation exists yet, so nothing to release.
+  let reservationId: string;
+  try {
+    ({ reservationId } = await reserveBudget(agentId, intentId, intent.amountMinor));
+  } catch (error) {
+    const failure = failureReason(error);
+    return {
+      status: "BLOCKED",
+      intentId,
+      ...target,
+      amountUsd: toUsd(intent.amountMinor),
+      decision: "BLOCK",
+      reasons: [{ ...failure, rule: "budget.ledger" }],
+      onChain: UNSIGNED,
+    };
+  }
 
   try {
     const allowToken = mintAllowToken(intent.intentHash, newId("evaluation")).token;
@@ -149,11 +171,11 @@ export async function runGuardedRequest(input: GuardedRequestInput): Promise<Gua
     }
 
     const settlement = readSettlement(paid);
-    await commitBudget();
+    await commitBudget(reservationId, settlement.txHash);
 
     return {
       status: "SETTLED",
-      intentId: intent.intentId,
+      intentId,
       ...target,
       amountUsd: toUsd(intent.amountMinor),
       decision: "ALLOW",
@@ -161,7 +183,7 @@ export async function runGuardedRequest(input: GuardedRequestInput): Promise<Gua
       payment: {
         amount: toUsd(intent.amountMinor),
         txHash: settlement.txHash,
-        explorerUrl: `${EXPLORER}${settlement.txHash}`,
+        explorerUrl: explorerTxUrl(intent.network, settlement.txHash) ?? "",
         settledAt: settlement.settledAt.toISOString(),
       },
       onChain: { signed: true, txHash: settlement.txHash },
@@ -169,14 +191,15 @@ export async function runGuardedRequest(input: GuardedRequestInput): Promise<Gua
     };
   } catch (error) {
     // Signing, retry, timeout, verify, settle — whichever failed, the reservation goes back.
-    await releaseBudget();
+    const failure = failureReason(error);
+    await releaseBudget(reservationId, failure.message);
     return {
       status: "FAILED",
-      intentId: intent.intentId,
+      intentId,
       ...target,
       amountUsd: toUsd(intent.amountMinor),
       decision: "ALLOW",
-      reasons: [failureReason(error)],
+      reasons: [failure],
       onChain: UNSIGNED,
     };
   }

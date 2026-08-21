@@ -1,10 +1,9 @@
 // OWNER: PAY. The private key lives here and nowhere else. Signs only when the allowToken verifies
 // and the offer still matches the approved intent term for term. SEC-3, SEC-4, threat T9.
-import { privateKeyToAccount } from "viem/accounts";
 import { computeIntentHash } from "@/payments/intent/hash";
 import { verifyAllowToken } from "@/payments/wallet/allowToken";
-import { createPaymentSignature, narrowToOffer } from "@/payments/x402/adapter";
-import type { PaymentRequired, PaymentRequirements } from "@/payments/x402/adapter";
+import { createPaymentSignature, narrowToOffer, toClientAvmSigner } from "@/payments/x402/adapter";
+import type { ClientAvmSigner, PaymentRequired, PaymentRequirements } from "@/payments/x402/adapter";
 import { env } from "@/shared/env";
 import type { PaymentIntent } from "@/shared/types";
 
@@ -22,14 +21,17 @@ export class SignerRefusedError extends Error {
   }
 }
 
-let account: ReturnType<typeof privateKeyToAccount> | undefined;
+let signer: ClientAvmSigner | undefined;
 
 /** Derived on first signature, never at import, so building the app never needs the key. */
-function agentAccount() {
-  account ??= privateKeyToAccount(env.AGENT_WALLET_PRIVATE_KEY as `0x${string}`);
-  return account;
+function agentSigner(): ClientAvmSigner {
+  signer ??= toClientAvmSigner(env.AVM_PRIVATE_KEY);
+  return signer;
 }
 
+// The recipient compare stays case-insensitive on purpose. EVM addresses are checksummed
+// mixed-case and legitimately arrive in either casing; Algorand base32 is uppercase-only, so
+// folding case cannot make two different Algorand addresses collide. Correct for both rails.
 function matchesIntent(intent: PaymentIntent, offer: PaymentRequirements): boolean {
   return offer.amount === intent.amountMinor.toString()
     && offer.asset === intent.asset
@@ -58,5 +60,5 @@ export async function signPaymentPayload(input: SignInput): Promise<string> {
   // 4. Consume the authorisation last, so a mismatch above never burns a valid token.
   verifyAllowToken(allowToken, intent.intentHash);
 
-  return createPaymentSignature(narrowToOffer(paymentRequired, offer), agentAccount());
+  return createPaymentSignature(narrowToOffer(paymentRequired, offer), agentSigner());
 }

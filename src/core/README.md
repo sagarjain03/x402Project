@@ -39,7 +39,7 @@ auditable and the whole security claim collapses.
 | `db/schema.ts` | **5 tables** (`../../../Docs/ARCHITECTURE.md` §10). Money columns are `bigint` minor units. |
 | `db/queries.ts` | ⭐ **The only place outside `budget/ledger.ts` that touches the DB.** Handlers call these, never `getDb()` directly. |
 | `db/index.ts` | Drizzle client, lazy. |
-| `db/seed.ts` | 2 agents, 6 merchants, 3 policies, 40 mixed-decision intents. **UI depends on this from hour 2.** |
+| `db/seed.ts` | 4 agents, 6 merchants, 6 policies, 52 mixed-decision intents (4 with real on-chain hashes). **UI depends on this from hour 2.** |
 | `db/reset.ts` | Wipes and re-seeds so the demo can be re-run cleanly on stage. |
 | `policy/rules.ts` | ⭐ The 13 precedence rules, each a pure `(ctx) => Reason \| null`. |
 | `policy/engine.ts` | ⭐ Ordered evaluation, first-BLOCK-wins, fail-closed. **Zero I/O.** |

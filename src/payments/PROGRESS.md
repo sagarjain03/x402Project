@@ -3,13 +3,13 @@
 [BUILD.md](./BUILD.md) is the plan. **This file is the record** — what was actually built, what is
 proven, what was decided, and what is still open. Updated at the end of every checkpoint.
 
-**Last updated:** 2026-08-15 · **Branch:** `pay/x402-poc` · **Owner:** PAY (D1 Payments Lead)
+**Last updated:** 2026-08-16 · **Branch:** `pay/x402-poc` · **Owner:** PAY (D1 Payments Lead)
 
 | C1 | C2 | C3 | C4 | C5 | C6 | C7 |
 |---|---|---|---|---|---|---|
 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟡 |
 
-**100 tests passing · 0 lint errors · typecheck clean · build clean · 7 real settlements on Base Sepolia**
+**116 tests passing across PAY and DEMO · 0 lint errors · typecheck clean · build clean · 9 real settlements on Base Sepolia**
 
 ---
 
@@ -70,7 +70,7 @@ Legend: 🟢 green · 🟡 partly done · ⚪ not started · 🔴 blocked
 | `tests/orchestrator.test.ts` | 15 | happy path, BLOCK/HOLD, 6 failure paths releasing the reservation |
 | `tests/gw-request.test.ts` | 12 | the frozen contract, auth, SSRF, 429, secret leakage |
 | `tests/fixtures.ts` | — | pinned real captures shared by the suite |
-| **Total** | **94** | plus 6 inherited from `src/core/tests/money.test.ts` |
+| **Total** | **94** | plus 6 from `core/tests/money` and 16 from DEMO = **116** suite-wide |
 
 ### Mutation testing
 
@@ -100,8 +100,10 @@ Every settlement below is a real transaction on Base Sepolia, paid in test USDC 
 | 5 | C5 | `0x7c54c3…7191` | a signature produced by `wallet/signer.ts` settles |
 | 6 | C6 | `0xa9f002…bec2` | the full orchestrator, with smuggled headers stripped |
 | 7 | C7 | `0x5ff0eb…13c4` | the public HTTP endpoint, end to end |
+| 8 | integration | `0xad75f6…a5ad` | the gateway against DEMO's real seller, $0.02 |
+| 9 | integration | `0x078724…60cd` | `poc:x402` retargeted to `/api/sandbox/search` |
 
-Balance: **$20.00 → $19.93**. Gas on every one was paid by the facilitator's signer
+Balance: **$20.00 → $19.91**. Gas on every one was paid by the facilitator's signer
 `0xd407e4…f1bf`, never by the agent — the agent wallet has held **0 ETH** throughout.
 
 ---
@@ -110,8 +112,7 @@ Balance: **$20.00 → $19.93**. Gas on every one was paid by the facilitator's s
 
 ### C1 — prove x402 works
 
-**Files.** `scripts/fund-wallet.ts`, `scripts/poc-seller.ts`, `scripts/poc-x402.ts`,
-`app/api/gw/poc-seller/route.ts`
+**Files.** `scripts/fund-wallet.ts`, `scripts/poc-x402.ts`
 
 x402 was the only dependency the team does not control, so it was proven before any product code.
 
@@ -124,7 +125,8 @@ x402 was the only dependency the team does not control, so it was proven before 
 | Amount | `"10000"` — integer minor units, never dollars |
 
 DEMO's sandbox was still a stub and the public fallback `x402.org/protected` returned 500, so PAY
-stood up a throwaway seller under `app/api/gw/`, a namespace PAY owns.
+stood up a throwaway seller under `app/api/gw/`, a namespace PAY owns. **Deleted 2026-08-16** once
+DEMO shipped; `poc:x402` now targets `/api/sandbox/search`.
 
 ### C2 — header codecs
 
@@ -270,9 +272,13 @@ forwarded.
 | **B3** | Live network id is `eip155:84532`; `src/core/db/seed.ts:33` and `src/core/policy/templates.ts:18` seed `allowedNetworks: ["base-sepolia"]`. Deny-by-default then blocks **every** payment | CORE | C7 half B |
 | **B6** | Same shape for assets: seeds say `allowedAssets: ["USDC"]`, the wire carries the contract address `0x036CbD…F7e`. The intent stores the address, because a symbol is merchant-supplied and forgeable while an address is not | CORE | C7 half B |
 | **B8** | `EvaluationResult` returns no approval expiry, so the 202 response uses a provisional 15-minute constant | CORE | cosmetic |
-| **B1** | DEMO's `/api/sandbox/search` is still `notImplemented`, so PAY runs a throwaway seller. Delete `scripts/poc-seller.ts` + `app/api/gw/poc-seller/` when DEMO ships | DEMO | cleanup |
-| **B2** | Buyer and seller must pin the **same** `@x402/*` major. PAY is on `2.22.0` | DEMO | integration |
+
+
 | **B5** | The buyer needs test **USDC**, not gas — resolved, documented for whoever funds the next wallet | — | closed |
+
+**B1 closed.** DEMO shipped six sandbox sellers. The throwaway seller and its route are deleted, `poc:x402` now targets `/api/sandbox/search`, and the ESLint SDK exemption is narrowed back to `src/payments/x402/**`.
+
+**B2 closed.** DEMO's `sandbox/middleware.ts` uses the same scoped SDK and the same `eip155:84532`.
 
 **B4 closed.** The header names in the repo docs were investigated and are correct for v2.
 
@@ -319,7 +325,7 @@ Both are marked with `ponytail:` comments at the code site.
 |---|---|---|---|
 | 1 | `wallet/balance.ts` — the only stub left in the division. Feeds `EvaluationContext.walletAllowanceRemainingMinor` (policy rule 10). The RPC reads already exist in `fund-wallet.ts` | nobody | ~15 min |
 | 2 | C7 half B — the engine swap, plus the four call sites B7 forces | CORE | ~10 min |
-| 3 | Delete the throwaway seller and its route | DEMO | 2 min |
+
 | 4 | P6 — production deploy to Vercel | C7 | ~30 min |
 | 5 | Move the allowToken replay store to Postgres | CORE's schema | optional |
 

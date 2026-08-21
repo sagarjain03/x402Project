@@ -42,6 +42,9 @@ export const POST = async (
 
     // A human approving does NOT skip the engine. Budgets and velocity may have moved since the
     // hold was raised, so the payment is judged again against the policy as it stands right now.
+    // Passing the intent id as the resume key is what tells the engine an approval now exists:
+    // without it the review rule fires a second time and puts the payment straight back in the
+    // queue this approval just cleared. Every blocking rule still applies.
     const replay: PaymentIntent = {
       intentId: intent.id,
       agentId: intent.agentId,
@@ -57,7 +60,7 @@ export const POST = async (
       state: "EVALUATING",
       createdAt: intent.createdAt,
     };
-    const reevaluation = await evaluatePayment({ intent: replay });
+    const reevaluation = await evaluatePayment({ intent: replay, idempotencyKey: intent.id });
 
     const updated = await getIntentById(approvalId);
     return ok({

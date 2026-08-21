@@ -23,7 +23,7 @@ npm run db:push && npm run db:seed
 npm run dev
 ```
 
-The seeded database is your source of truth for shapes: **30 settled, 8 blocked, 2 held**, 2 agents
+The seeded database is your source of truth for shapes: **30 settled, 8 blocked, 2 held**, 4 agents
 (one `ACTIVE`, one `FROZEN`), 3 policy versions on ResearchBot. Build fixtures from those exact rows
 and the swap to the live API changes nothing visible.
 

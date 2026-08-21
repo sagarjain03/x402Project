@@ -2,7 +2,7 @@
 // Every term comes off the wire or from the request. Nothing here is inferred or defaulted.
 import { randomBytes } from "node:crypto";
 import { computeIntentHash } from "@/payments/intent/hash";
-import { PaymentHeaderError } from "@/payments/x402/headers";
+import { PaymentHeaderError, isRecipientAddress } from "@/payments/x402/headers";
 import type { PaymentRequirements } from "@/payments/x402/adapter";
 import { newId } from "@/shared/ids";
 import type { PaymentIntent } from "@/shared/types";
@@ -16,7 +16,6 @@ export interface BuildIntentInput {
 }
 
 const MINOR_UNITS = /^\d+$/;
-const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 
 function check(condition: boolean, message: string): void {
   if (!condition) throw new PaymentHeaderError("INVALID_PAYMENT_REQUIREMENTS", message);
@@ -36,7 +35,7 @@ export function buildIntentFromRequirements(input: BuildIntentInput): PaymentInt
 
   // Re-checked here as well as at decode: this is exported, so it is its own trust boundary.
   check(MINOR_UNITS.test(requirements.amount), `Amount must be integer minor units, got ${JSON.stringify(requirements.amount)}.`);
-  check(ADDRESS.test(requirements.payTo), `payTo is not an address: ${JSON.stringify(requirements.payTo)}.`);
+  check(isRecipientAddress(requirements.payTo), `payTo is not an address: ${JSON.stringify(requirements.payTo)}.`);
 
   const terms = {
     intentId: newId("intent"),
@@ -45,7 +44,7 @@ export function buildIntentFromRequirements(input: BuildIntentInput): PaymentInt
     amountMinor: BigInt(requirements.amount),
     asset: requirements.asset,
     network: requirements.network,
-    recipient: requirements.payTo as `0x${string}`,
+    recipient: requirements.payTo,
     ...resolveTarget(requestUrl, method),
     reason,
     nonce: randomBytes(16).toString("hex"),

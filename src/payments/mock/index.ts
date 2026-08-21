@@ -3,8 +3,12 @@
 import type { PaymentRequired } from "@/payments/x402/adapter";
 import type { SettlementResult } from "@/shared/types";
 
-/** Obviously fake, but still a well-formed 32-byte hash so validation behaves as in production. */
-export const MOCK_TX_HASH = `0x${"deadbeef".repeat(8)}` as `0x${string}`;
+/**
+ * Obviously fake, but a well-formed 52-character Algorand transaction id so that anything
+ * validating the shape behaves exactly as it does against the real rail. A 0x-hash here would let
+ * a USE_MOCKS=1 run pass while the same code fails on Algorand.
+ */
+export const MOCK_TX_HASH = "MOCK4TESTNET4ONLY4NEVER4BROADCASTAAAAAAAAAAAAAAAAAAA";
 
 export async function createPaymentSignature(paymentRequired: PaymentRequired): Promise<string> {
   const payload = { x402Version: paymentRequired.x402Version, payload: { mock: true } };

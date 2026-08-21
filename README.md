@@ -73,7 +73,7 @@ a one-line import swap, four times, at the checkpoints marked 🚨.
 ## Stack
 
 Next.js 16 (App Router) · React 19 · TypeScript · **Tailwind v4** (CSS config in `app/globals.css`,
-there is no `tailwind.config.ts`) · PostgreSQL + Drizzle · `@x402/*` + viem · Base Sepolia.
+there is no `tailwind.config.ts`) · PostgreSQL + Drizzle · `@x402/*` + algosdk · Algorand TestNet.
 
 > ⚠️ This is Next.js 16. See [`AGENTS.md`](AGENTS.md) - APIs and conventions differ from older
 > versions. Check `node_modules/next/dist/docs/` before writing routing or data-fetching code.
@@ -91,7 +91,7 @@ Two dependency groups are **not** installed yet, on purpose:
 
 | Group | Installed by | When |
 |---|---|---|
-| `@x402/fetch @x402/evm @x402/next` | PAY | Phase 0, after pinning the real versions |
+| `@x402/fetch @x402/avm @x402/next` | PAY | Phase 0, after pinning the real versions |
 | `ai @ai-sdk/groq` | DEMO | Phase 4c, only for the prompt-injection demo |
 
 ## Non-negotiable rules

@@ -5,6 +5,7 @@ import {
   findByIdempotencyKey,
   getActivePolicy,
   getAgentById,
+  getIntentById,
   getSpendCounters,
   insertIntent,
   recordDecision,
@@ -18,7 +19,7 @@ import type {
   Policy,
   Reason,
 } from "@/shared/types";
-import type { PolicyRow } from "@/core/db/schema";
+import type { PaymentIntentRow, PolicyRow } from "@/core/db/schema";
 
 export interface EvaluatePaymentInput {
   intent: PaymentIntent;
@@ -36,6 +37,45 @@ function failClosed(code: "GUARD_UNAVAILABLE" | "IDEMPOTENCY_CONFLICT", latencyM
     policyVersion: 0,
     latencyMs,
   };
+}
+
+/**
+ * Whether two attempts are the same payment.
+ *
+ * Not intentHash: the nonce is regenerated on every attempt and is inside that hash by design —
+ * it is what makes an allow-token unforgeable for a different intent (threat T9) — so two attempts
+ * at one payment never share a hash, and comparing hashes rejected every genuine retry.
+ *
+ * The reason string is excluded too: it is free text the agent may reword on a retry.
+ *
+ * What is compared is every term the policy engine judges. A merchant that re-quotes a different
+ * price therefore fails this check and is judged from scratch — an approval of $0.50 must never
+ * be spent settling a $0.90 invoice.
+ */
+function sameTerms(prior: PaymentIntentRow, intent: PaymentIntent): boolean {
+  return prior.amountMinor === intent.amountMinor
+    && prior.asset === intent.asset
+    && prior.network === intent.network
+    && prior.recipient === intent.recipient
+    && prior.merchantDomain === intent.merchant
+    && prior.resource === intent.resource;
+}
+
+/**
+ * The row a resume key points at, or null.
+ *
+ * Two things can be handed back as a resume token and both have to work: an Idempotency-Key the
+ * agent chose, and the intent id the 202 returned — which is the only one a held payment gets,
+ * and the one CORE's own approve handler uses when it re-judges an intent in place.
+ *
+ * The agent filter is not cosmetic. Without it one agent could resume another's approved payment
+ * by quoting its id, which is an approval-stealing bug, not an idempotency one.
+ */
+async function findResumable(agentId: string, key: string): Promise<PaymentIntentRow | null> {
+  const byKey = await findByIdempotencyKey(agentId, key);
+  if (byKey) return byKey;
+  const byId = await getIntentById(key);
+  return byId?.agentId === agentId ? byId : null;
 }
 
 function toPolicy(row: PolicyRow): Policy {
@@ -56,26 +96,45 @@ export async function evaluatePayment(input: EvaluatePaymentInput): Promise<Eval
   const elapsed = () => Math.round(performance.now() - startedAt);
   const { intent, idempotencyKey } = input;
 
+  // Which row the decision lands on, and whether a reviewer has already cleared this payment.
+  // Declared out here so the fail-closed catch below records against the same row as the happy path.
+  let recordAgainstId = intent.intentId;
+  let approvalGranted = false;
+
   try {
     if (idempotencyKey) {
-      const prior = await findByIdempotencyKey(intent.agentId, idempotencyKey);
+      const prior = await findResumable(intent.agentId, idempotencyKey);
       if (prior) {
-        // Same key, different body is an attacker or a bug — either way it is not the same payment.
-        if (prior.intentHash !== intent.intentHash) return failClosed("IDEMPOTENCY_CONFLICT", elapsed());
-        return {
-          decision: prior.decision ?? "BLOCK",
-          reasons: prior.reasons ?? [],
-          riskScore: prior.riskScore,
-          riskSignals: prior.riskSignals ?? [],
-          matchedRules: prior.matchedRules ?? [],
-          policyVersion: prior.policyVersion ?? 0,
-          latencyMs: elapsed(),
-        };
+        // Same key, different terms is an attacker or a bug — either way it is not the same payment.
+        if (!sameTerms(prior, intent)) return failClosed("IDEMPOTENCY_CONFLICT", elapsed());
+
+        // Replaying a key whose payment already settled must never sign a second one. A full replay
+        // would hand back the stored response; response bodies are not stored, so this fails closed.
+        if (prior.txHash) return failClosed("IDEMPOTENCY_CONFLICT", elapsed());
+
+        if (prior.approvalStatus === "APPROVED") {
+          // Re-judge it — API_DOCS 5.4: approval triggers a fresh evaluation, because budgets and
+          // velocity may have moved while it waited. The settlement lands on the approved row.
+          recordAgainstId = prior.id;
+          approvalGranted = true;
+        } else {
+          return {
+            decision: prior.decision ?? "BLOCK",
+            intentId: prior.id,
+            reasons: prior.reasons ?? [],
+            riskScore: prior.riskScore,
+            riskSignals: prior.riskSignals ?? [],
+            matchedRules: prior.matchedRules ?? [],
+            policyVersion: prior.policyVersion ?? 0,
+            latencyMs: elapsed(),
+          };
+        }
       }
     }
 
     // The attempt is recorded before it is judged, so a refused payment still leaves a trace.
-    await insertIntent({
+    // Skipped on a resume: that row already exists, and it is the one the reviewer approved.
+    if (!approvalGranted) await insertIntent({
       id: intent.intentId,
       agentId: intent.agentId,
       amountMinor: intent.amountMinor,
@@ -87,7 +146,9 @@ export async function evaluatePayment(input: EvaluatePaymentInput): Promise<Eval
       reason: intent.reason,
       nonce: intent.nonce,
       intentHash: intent.intentHash,
-      idempotencyKey: idempotencyKey ?? null,
+      // Defaulting to the intent's own id is what makes a held payment resumable: the 202 hands
+      // that id back to the agent, and the agent returns it as the key once a human has approved.
+      idempotencyKey: idempotencyKey ?? intent.intentId,
       state: "EVALUATING",
       createdAt: intent.createdAt,
     });
@@ -129,11 +190,13 @@ export async function evaluatePayment(input: EvaluatePaymentInput): Promise<Eval
       ),
       pinnedRecipient: pinnedRecipient as `0x${string}` | undefined,
       walletAllowanceRemainingMinor,
+      approvalGranted,
       now,
     };
 
     const result = evaluate(context);
     result.latencyMs = elapsed();
+    result.intentId = recordAgainstId;
 
     // Audit BEFORE the result returns, so nothing can be signed against a decision that was
     // never recorded. CLAUDE.md rule 4 — this ordering is the security property, not a preference.
@@ -148,14 +211,15 @@ export async function evaluatePayment(input: EvaluatePaymentInput): Promise<Eval
         policyVersion: result.policyVersion,
       },
       `agent:${intent.agentId}`,
-      { agentId: intent.agentId, intentId: intent.intentId, live: "decision" },
+      { agentId: intent.agentId, intentId: recordAgainstId, live: "decision" },
     );
 
-    await recordDecision(intent.intentId, result);
+    await recordDecision(recordAgainstId, result);
     return result;
   } catch (error) {
     console.error("evaluatePayment failed closed:", error);
     const blocked = failClosed("GUARD_UNAVAILABLE", elapsed());
+    blocked.intentId = recordAgainstId;
 
     // Best effort only. The guard is already returning BLOCK; a second failure must not change that.
     try {
@@ -163,9 +227,9 @@ export async function evaluatePayment(input: EvaluatePaymentInput): Promise<Eval
         "DECISION",
         { decision: "BLOCK", reason: "GUARD_UNAVAILABLE", error: String(error) },
         "guard",
-        { agentId: intent.agentId, intentId: intent.intentId, live: "decision" },
+        { agentId: intent.agentId, intentId: recordAgainstId, live: "decision" },
       );
-      await recordDecision(intent.intentId, blocked);
+      await recordDecision(recordAgainstId, blocked);
     } catch {
       // The database is what failed in the first place; there is nowhere left to write.
     }

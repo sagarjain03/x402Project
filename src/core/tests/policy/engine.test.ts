@@ -225,3 +225,67 @@ describe("policy engine", () => {
     expect(result.riskSignals.length).toBeGreaterThan(0);
   });
 });
+
+// ---------------------------------------------------------------------------------------------
+// A human approval is permission to pass the review gate, not permission to pass everything else.
+// The asymmetry below is the whole security property: HOLD is spent, every BLOCK still stands.
+// ---------------------------------------------------------------------------------------------
+describe("approvalGranted", () => {
+  const inBand = () => makeIntent({ amountMinor: toMinor("0.50") });
+
+  it("HOLDs an in-band amount when no approval has been granted", () => {
+    const result = evaluate(makeContext({ intent: inBand() }));
+    expect(result.decision).toBe("HOLD");
+    expect(result.reasons[0].code).toBe("APPROVAL_REQUIRED");
+  });
+
+  it("ALLOWs the same amount once a reviewer has approved it", () => {
+    const result = evaluate(makeContext({ intent: inBand(), approvalGranted: true }));
+    expect(result.decision).toBe("ALLOW");
+    expect(result.reasons).toEqual([]);
+  });
+
+  it("ALLOWs an approved unknown merchant that would otherwise be queued for review", () => {
+    const ctx = makeContext({
+      intent: makeIntent({ merchant: "unknown.example.com" }),
+      merchantKnown: false,
+      policy: makePolicy({
+        rules: makePolicyRules({
+          merchant: { ...makePolicyRules().merchant, unknownMerchantAction: "HOLD" },
+        }),
+      }),
+      approvalGranted: true,
+    });
+    expect(evaluate(ctx).decision).toBe("ALLOW");
+  });
+
+  it("does NOT rescue a payment any blocking rule refuses", () => {
+    const blocked: { why: string; ctx: EvaluationContext }[] = [
+      { why: "over the per-transaction limit", ctx: makeContext({ intent: makeIntent({ amountMinor: toMinor("2.00") }), approvalGranted: true }) },
+      { why: "frozen agent", ctx: makeContext({ agentStatus: "FROZEN", approvalGranted: true }) },
+      { why: "budget exhausted", ctx: makeContext({ intent: makeIntent({ amountMinor: toMinor("0.50") }), counters: makeCounters({ daySpentMinor: toMinor("4.95") }), approvalGranted: true }) },
+      { why: "velocity", ctx: makeContext({ intent: makeIntent({ amountMinor: toMinor("0.50") }), counters: makeCounters({ txLastMinute: 10 }), approvalGranted: true }) },
+      { why: "wrong rail", ctx: makeContext({ intent: makeIntent({ amountMinor: toMinor("0.50"), network: "ethereum-mainnet" }), approvalGranted: true }) },
+      { why: "recipient not the pinned one", ctx: makeContext({ intent: makeIntent({ amountMinor: toMinor("0.50"), recipient: ROGUE_WALLET }), approvalGranted: true }) },
+    ];
+
+    for (const { why, ctx } of blocked) {
+      const result = evaluate(ctx);
+      expect(result.decision, `approval must not rescue: ${why}`).toBe("BLOCK");
+    }
+  });
+
+  it("still BLOCKs on risk score even when approved, because riskBlockScore is a block not a hold", () => {
+    const ctx = makeContext({
+      intent: makeIntent({ amountMinor: toMinor("0.50") }),
+      counters: makeCounters({ blockedAttemptsLast5Min: 5, txLastMinute: 8, isFirstPayment: true }),
+      policy: makePolicy({
+        rules: makePolicyRules({ risk: { ...makePolicyRules().risk, riskBlockScore: 1 } }),
+      }),
+      approvalGranted: true,
+    });
+    const result = evaluate(ctx);
+    expect(result.decision).toBe("BLOCK");
+    expect(result.reasons[0].code).toBe("RISK_TOO_HIGH");
+  });
+});

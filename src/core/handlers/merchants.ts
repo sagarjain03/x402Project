@@ -23,18 +23,18 @@ export const GET = async (request: Request): Promise<Response> =>
     const merchants = [];
     for (const agent of agents) {
       const policy = await getActivePolicy(agent.id);
-      if (!policy) continue;
-      const { allowedMerchants, blockedMerchants, pinnedRecipients } = policy.rules.merchant;
+      if (!policy || !policy.rules?.merchant) continue;
+      const { allowedMerchants = [], blockedMerchants = [], pinnedRecipients = {} } = policy.rules.merchant;
 
       merchants.push({
         agentId: agent.id,
         policyVersion: policy.version,
         allowed: allowedMerchants.map((domain) => ({
           domain,
-          pinnedRecipient: pinnedRecipients[domain] ?? null,
+          pinnedRecipient: pinnedRecipients?.[domain] ?? null,
         })),
         blocked: blockedMerchants,
-        unknownMerchantAction: policy.rules.merchant.unknownMerchantAction,
+        unknownMerchantAction: policy.rules.merchant.unknownMerchantAction || "BLOCK",
       });
     }
 

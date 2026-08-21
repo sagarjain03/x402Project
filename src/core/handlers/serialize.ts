@@ -2,17 +2,11 @@
 // serialise) and never a number (which loses minor units). The UI renders these strings directly.
 import type { AgentRow, AuditLogRow, BudgetLedgerRow, PaymentIntentRow, PolicyRow } from "@/core/db/schema";
 import { toUsd } from "@/shared/money";
+import { explorerTxUrl } from "@/shared/explorer";
 
-const EXPLORERS: Record<string, string> = {
-  "base-sepolia": "https://sepolia.basescan.org/tx/",
-  "eip155:84532": "https://sepolia.basescan.org/tx/",
-  base: "https://basescan.org/tx/",
-};
-
+/** Kept as a named export because handlers import it; the rail table lives in @/shared/explorer. */
 export function explorerUrl(network: string, txHash: string | null): string | null {
-  if (!txHash) return null;
-  const base = EXPLORERS[network];
-  return base ? `${base}${txHash}` : null;
+  return explorerTxUrl(network, txHash);
 }
 
 const iso = (value: Date | null): string | null => value?.toISOString() ?? null;

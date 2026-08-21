@@ -31,8 +31,8 @@ export interface PaymentIntent {
   /** USDC minor units. $0.05 => 50000n. Never a float. */
   amountMinor: bigint;
   asset: string;                 // "USDC"
-  network: string;               // "base-sepolia"
-  recipient: `0x${string}`;      // payTo from PAYMENT-REQUIRED
+  network: string;               // CAIP-2, exactly as quoted on the wire
+  recipient: string;             // payTo from PAYMENT-REQUIRED. EVM hex or Algorand base32.
   merchant: string;              // hostname, the allowlist key
   resource: string;              // "POST /api/sandbox/search"
   reason?: string;               // the "WHY" dimension, from X-Guard-Reason
@@ -61,6 +61,12 @@ export interface RiskSignal {
 
 export interface EvaluationResult {
   decision: Decision;
+  /**
+   * The intent row this decision was recorded against. Differs from the intent the caller built
+   * only when a human-approved payment was resumed: the settlement then lands on the row the
+   * reviewer actually approved, instead of on a fresh copy of it.
+   */
+  intentId?: string;
   reasons: Reason[];
   riskScore: number;             // 0-100
   riskSignals: RiskSignal[];
@@ -92,8 +98,13 @@ export interface EvaluationContext {
   counters: SpendCounters;
   agentStatus: AgentStatus;
   merchantKnown: boolean;
-  pinnedRecipient?: `0x${string}`;
+  pinnedRecipient?: string;
   walletAllowanceRemainingMinor: bigint;
+  /**
+   * A human has already reviewed this exact payment and approved it. Suppresses HOLD only —
+   * every blocking rule is still evaluated, because an approval is permission, not a bypass.
+   */
+  approvalGranted?: boolean;
   /** Injected, never read from Date.now() inside the engine. Keeps it deterministic. */
   now: Date;
 }
@@ -165,7 +176,7 @@ export interface Reservation {
 // ---------------------------------------------------------------------------
 
 export interface SettlementResult {
-  txHash: `0x${string}`;
+  txHash: string;                // EVM 0x-hash or Algorand base32 transaction id.
   settledAt: Date;
   raw: unknown;                  // the decoded PAYMENT-RESPONSE payload
 }

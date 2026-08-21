@@ -1,4 +1,3 @@
-/** OWNER: DEMO - paid x402 seller, $0.02. */
+/** OWNER: DEMO - paid x402 seller, $0.08. Demo D3 velocity loop. */
 export const runtime = "nodejs";
-export { POST } from "@/demo/handlers/sandbox-fact-check";
-
+export { GET, POST } from "@/demo/handlers/sandbox-fact-check";

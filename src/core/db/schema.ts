@@ -36,7 +36,7 @@ export const agents = pgTable(
     activePolicyId: text("active_policy_id"),
 
     walletAddress: text("wallet_address"),
-    walletNetwork: text("wallet_network").notNull().default("base-sepolia"),
+    walletNetwork: text("wallet_network").notNull().default("algorand-testnet"),
     // drizzle-kit JSON.stringify's the snapshot, so bigint defaults must be written as SQL.
     walletAllowanceCapMinor: bigint("wallet_allowance_cap_minor", { mode: "bigint" }).notNull().default(sql`0`),
     walletFundedMinor: bigint("wallet_funded_minor", { mode: "bigint" }).notNull().default(sql`0`),

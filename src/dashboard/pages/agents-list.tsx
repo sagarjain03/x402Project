@@ -8,7 +8,7 @@ import { CreateAgentModal } from "@/dashboard/components/create-agent-modal";
 import { DecisionBar, type DecisionMixRow } from "@/dashboard/charts/decision-bar";
 import { BudgetBars, type BudgetBarRow } from "@/dashboard/charts/budget-bars";
 import type { TransactionRow } from "@/dashboard/hooks/useLiveDecisions";
-import { Bot, Coins, Plus, ShieldAlert, ShieldCheck, TrendingDown, Zap } from "lucide-react";
+import { Bot, Coins, Plus, AlertOctagon, CheckCircle2, TrendingDown, Zap } from "lucide-react";
 import { Card } from "@/dashboard/components/ui/card";
 import { Button } from "@/dashboard/components/ui/button";
 import { Progress } from "@/dashboard/components/ui/progress";
@@ -207,14 +207,14 @@ export function AgentsListPage() {
           value={loading ? "…" : String(activeCount)}
           hint="Operating within policy"
           tone="text-emerald-600"
-          icon={<ShieldCheck className="h-4 w-4 text-emerald-600" />}
+          icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
         />
         <Stat
           label="Frozen"
           value={loading ? "…" : String(frozenCount)}
           hint={frozenCount > 0 ? "Blocked before any rule runs" : "None frozen"}
           tone="text-rose-600"
-          icon={<ShieldAlert className="h-4 w-4 text-rose-600" />}
+          icon={<AlertOctagon className="h-4 w-4 text-rose-600" />}
         />
         <Stat
           label="Spent (30d)"
@@ -232,7 +232,7 @@ export function AgentsListPage() {
 
       {error && (
         <div className="flex items-start gap-3 p-5 rounded-xl border border-gray-200 bg-white shadow-xs border-l-4 border-l-red-500">
-          <ShieldAlert className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+          <AlertOctagon className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
           <p className="text-sm text-gray-700">{error}</p>
         </div>
       )}

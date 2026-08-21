@@ -10,8 +10,8 @@ import { DecisionFeed } from "@/dashboard/components/decision-feed";
 import { ErrorCard } from "@/dashboard/components/error-card";
 import {
   DollarSign,
-  ShieldBan,
-  ShieldCheck,
+  Ban,
+  CheckCircle2,
   Zap,
   TrendingDown,
   ChevronRight,
@@ -289,7 +289,7 @@ export function OverviewPage() {
                       <div className="flex items-center gap-2.5">
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="h-7 w-7 rounded-lg bg-rose-950/80 border border-rose-800/40 text-rose-400 flex items-center justify-center">
-                            <ShieldBan className="h-4 w-4" />
+                            <Ban className="h-4 w-4" />
                           </div>
                           <span className="text-xs font-semibold tracking-wide text-rose-200">
                             Money Refused
@@ -318,7 +318,7 @@ export function OverviewPage() {
                       {/* Header Eyebrow + Icon */}
                       <div className="flex items-center gap-2.5">
                         <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                          <ShieldCheck className="h-4 w-4" />
+                          <CheckCircle2 className="h-4 w-4" />
                         </div>
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                           Blocked, Yet On-Chain

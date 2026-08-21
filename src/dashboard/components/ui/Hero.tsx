@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield } from "lucide-react";
+import { Lock } from "lucide-react";
 import { CloudShader } from "./cloud-shader";
 
 export type HeroProps = {
@@ -43,7 +43,7 @@ export function Hero({
       <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 text-white group cursor-pointer">
           <div className="h-9 w-9 rounded-xl bg-white/15 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-xs group-hover:bg-white/25 transition-all">
-            <Shield className="h-5 w-5 fill-white/20 text-white" />
+            <Lock className="h-5 w-5 text-white" />
           </div>
           <span className="font-black text-xl tracking-wider text-white drop-shadow-sm uppercase">
             WARDEN
@@ -58,13 +58,11 @@ export function Hero({
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`transition-colors drop-shadow-sm underline-offset-4 ${
-                  item.hideOnMobile ? "hidden sm:inline " : ""
-                }${
-                  isActive
+                className={`transition-colors drop-shadow-sm underline-offset-4 ${item.hideOnMobile ? "hidden sm:inline " : ""
+                  }${isActive
                     ? "text-white font-semibold underline decoration-2"
                     : "hover:text-white hover:underline"
-                }`}
+                  }`}
               >
                 {item.label}
               </Link>

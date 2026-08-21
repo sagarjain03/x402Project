@@ -9,9 +9,9 @@ import { ErrorCard } from "@/dashboard/components/error-card";
 import { toFeedItem, type LiveDecisionItem, type TransactionRow } from "@/dashboard/hooks/useLiveDecisions";
 import {
   ArrowLeftRight,
-  ShieldCheck,
-  ShieldBan,
-  Shield,
+  CheckCircle2,
+  Ban,
+  Lock,
   FileText,
 } from "lucide-react";
 import { Card } from "@/dashboard/components/ui/card";
@@ -32,26 +32,26 @@ export function TransactionsPage() {
   const [loading, setLoading] = useState(true);
 
   const loadTransactions = useCallback(async () => {
-      try {
-        setLoading(true);
-        // The transactions endpoint returns agentId, not the name, so the roster is fetched once
-        // and joined here. A failure leaves agentName undefined and the table falls back to the id,
-        // which is the point: a row must never display an agent it cannot actually identify.
-        const [data, roster] = await Promise.all([
-          apiGet<TransactionsApiResponse>(`${API.transactions}?limit=200`),
-          apiGet<AgentsApiResponse>(API.agents).catch(() => null),
-        ]);
-        const names = new Map((roster?.agents ?? []).map((agent) => [agent.agentId, agent.name]));
-        setTransactions((data?.transactions ?? []).map((row) => ({
-          ...toFeedItem(row),
-          agentName: names.get(row.agentId),
-        })));
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not load transactions.");
-      } finally {
-        setLoading(false);
-      }
+    try {
+      setLoading(true);
+      // The transactions endpoint returns agentId, not the name, so the roster is fetched once
+      // and joined here. A failure leaves agentName undefined and the table falls back to the id,
+      // which is the point: a row must never display an agent it cannot actually identify.
+      const [data, roster] = await Promise.all([
+        apiGet<TransactionsApiResponse>(`${API.transactions}?limit=200`),
+        apiGet<AgentsApiResponse>(API.agents).catch(() => null),
+      ]);
+      const names = new Map((roster?.agents ?? []).map((agent) => [agent.agentId, agent.name]));
+      setTransactions((data?.transactions ?? []).map((row) => ({
+        ...toFeedItem(row),
+        agentName: names.get(row.agentId),
+      })));
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load transactions.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -100,7 +100,7 @@ export function TransactionsPage() {
       {/* 4 Redesigned Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* 1. Total Intents */}
-  <Card className="rounded-2xl p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
+        <Card className="rounded-2xl p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
           <div className="space-y-3">
             {/* Icon + Eyebrow */}
             <div className="flex items-center gap-2.5">
@@ -125,12 +125,12 @@ export function TransactionsPage() {
         </Card>
 
         {/* 2. Money Protected (Strongest Card) */}
-  <Card className="rounded-2xl border-emerald-200/80 p-5 shadow-sm hover:shadow transition-all flex flex-col justify-between relative overflow-hidden group bg-gradient-to-br from-white via-emerald-50/20 to-emerald-50/40">
+        <Card className="rounded-2xl border-emerald-200/80 p-5 shadow-sm hover:shadow transition-all flex flex-col justify-between relative overflow-hidden group bg-gradient-to-br from-white via-emerald-50/20 to-emerald-50/40">
           <div className="space-y-3">
             {/* Icon + Eyebrow */}
             <div className="flex items-center gap-2.5">
               <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <Shield className="h-4 w-4" />
+                <Lock className="h-4 w-4" />
               </div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
                 MONEY PROTECTED
@@ -150,12 +150,12 @@ export function TransactionsPage() {
         </Card>
 
         {/* 3. Allowed */}
-  <Card className="rounded-2xl p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
+        <Card className="rounded-2xl p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
           <div className="space-y-3">
             {/* Icon + Eyebrow */}
             <div className="flex items-center gap-2.5">
               <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <ShieldCheck className="h-4 w-4" />
+                <CheckCircle2 className="h-4 w-4" />
               </div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 ALLOWED
@@ -180,12 +180,12 @@ export function TransactionsPage() {
         </Card>
 
         {/* 4. Blocked / Held */}
-  <Card className="rounded-2xl p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
+        <Card className="rounded-2xl p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
           <div className="space-y-3">
             {/* Icon + Eyebrow */}
             <div className="flex items-center gap-2.5">
               <div className="h-7 w-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
-                <ShieldBan className="h-4 w-4" />
+                <Ban className="h-4 w-4" />
               </div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 BLOCKED / HELD

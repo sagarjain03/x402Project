@@ -5,7 +5,7 @@ import { apiGet } from "@/dashboard/api-client/client";
 import { API } from "@/dashboard/api-client/endpoints";
 import {
   ScrollText,
-  ShieldCheck,
+  CheckCircle2,
   RotateCw,
   Search,
   ChevronDown,
@@ -124,13 +124,12 @@ export function AuditPage() {
         {/* Issue 7: button placed directly beside the status text, not pushed to the far right */}
         <div className="flex flex-wrap items-center gap-3.5">
           <div
-            className={`p-2.5 rounded-xl border ${
-              verify?.valid !== false
+            className={`p-2.5 rounded-xl border ${verify?.valid !== false
                 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                 : "bg-rose-500/20 text-rose-400 border-rose-500/30"
-            }`}
+              }`}
           >
-            <ShieldCheck className="h-6 w-6" />
+            <CheckCircle2 className="h-6 w-6" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-bold text-sm text-white flex items-center gap-2 font-mono flex-wrap">

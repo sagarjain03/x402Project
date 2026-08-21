@@ -6,8 +6,6 @@ import { API } from "@/dashboard/api-client/endpoints";
 import { ScenarioTerminal } from "@/dashboard/components/scenario-terminal";
 import {
   PlayCircle,
-  ShieldCheck,
-  ShieldAlert,
   Clock,
   Sparkles,
   RotateCw,
@@ -248,13 +246,12 @@ export function SimulatorPage() {
           return (
             <div
               key={s.id}
-              className={`bg-white rounded-xl border p-5 shadow-xs flex flex-col justify-between space-y-4 transition-all ${
-                isRunning
+              className={`bg-white rounded-xl border p-5 shadow-xs flex flex-col justify-between space-y-4 transition-all ${isRunning
                   ? "border-blue-400 ring-2 ring-blue-100 shadow-md"
                   : result?.passed
-                  ? "border-zinc-200 hover:border-zinc-300 hover:shadow-sm"
-                  : "border-zinc-200"
-              }`}
+                    ? "border-zinc-200 hover:border-zinc-300 hover:shadow-sm"
+                    : "border-zinc-200"
+                }`}
             >
               <div className="space-y-3">
                 {/* Card Header — issues 2,4,8 */}
@@ -270,13 +267,12 @@ export function SimulatorPage() {
                         </span>
                       )}
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold font-mono ${
-                          s.expected === "ALLOW"
+                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold font-mono ${s.expected === "ALLOW"
                             ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                             : s.expected === "HOLD"
-                            ? "bg-amber-50 text-amber-700 border border-amber-200"
-                            : "bg-rose-50 text-rose-700 border border-rose-200"
-                        }`}
+                              ? "bg-amber-50 text-amber-700 border border-amber-200"
+                              : "bg-rose-50 text-rose-700 border border-rose-200"
+                          }`}
                       >
                         Expected: {s.expected}
                       </span>

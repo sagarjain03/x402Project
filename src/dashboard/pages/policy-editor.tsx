@@ -12,7 +12,7 @@ import {
 } from "@/dashboard/components/policy-simulation-results";
 import type { Policy, PolicyRules } from "@/shared/types";
 import {
-  Shield,
+  Lock,
   History,
   Code,
   Sparkles,
@@ -114,7 +114,7 @@ export function PolicyEditorPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-zinc-900 flex items-center gap-2.5">
-            <Shield className="h-6 w-6 text-zinc-700" />
+            <Lock className="h-6 w-6 text-zinc-700" />
             Policy Engine Editor
           </h2>
           <p className="text-sm text-zinc-500 mt-1">

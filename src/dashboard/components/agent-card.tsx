@@ -7,8 +7,8 @@ import {
   Bot,
   Gauge,
   Lock,
-  ShieldAlert,
-  ShieldCheck,
+  AlertOctagon,
+  CheckCircle2,
   Wallet,
 } from "lucide-react";
 import { Card, CardContent } from "@/dashboard/components/ui/card";
@@ -145,12 +145,12 @@ export function AgentCard({ agent, onStatusChange }: { agent: AgentItem; onStatu
           >
             {isFrozen ? (
               <>
-                <ShieldAlert className="h-3.5 w-3.5" />
+                <AlertOctagon className="h-3.5 w-3.5" />
                 FROZEN
               </>
             ) : (
               <>
-                <ShieldCheck className="h-3.5 w-3.5" />
+                <CheckCircle2 className="h-3.5 w-3.5" />
                 ACTIVE
               </>
             )}
@@ -161,7 +161,7 @@ export function AgentCard({ agent, onStatusChange }: { agent: AgentItem; onStatu
 
         {isFrozen && agent.frozenReason && (
           <div className="flex items-start gap-2.5 p-4 rounded-lg border border-gray-100 bg-white border-l-4 border-l-red-500">
-            <ShieldAlert className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+            <AlertOctagon className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
             <p className="text-xs text-gray-700 leading-relaxed">
               <span className="font-semibold">Frozen reason:</span> {agent.frozenReason}
             </p>

@@ -3,9 +3,9 @@
 import type { LiveDecisionItem } from "@/dashboard/hooks/useLiveDecisions";
 import {
   FileCode,
-  ShieldCheck,
-  ShieldAlert,
-  ShieldBan,
+  AlertOctagon,
+  AlertCircle,
+  Ban,
   CheckCircle2,
   Lock,
   ExternalLink,
@@ -56,7 +56,7 @@ export function TxTimeline({ transaction }: { transaction: LiveDecisionItem }) {
         {/* Step 2: Policy Evaluation */}
         <li className="mb-6 ml-6">
           <span className="absolute -left-3.5 flex items-center justify-center w-7 h-7 bg-blue-50 rounded-full ring-4 ring-white border border-blue-200 text-blue-600">
-            <ShieldCheck className="h-3.5 w-3.5" />
+            <Lock className="h-3.5 w-3.5" />
           </span>
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-sm text-zinc-900">
@@ -93,9 +93,9 @@ export function TxTimeline({ transaction }: { transaction: LiveDecisionItem }) {
             {isAllow ? (
               <CheckCircle2 className="h-3.5 w-3.5" />
             ) : isHold ? (
-              <ShieldAlert className="h-3.5 w-3.5" />
+              <AlertCircle className="h-3.5 w-3.5" />
             ) : (
-              <ShieldBan className="h-3.5 w-3.5" />
+              <Ban className="h-3.5 w-3.5" />
             )}
           </span>
           <div className="flex items-center justify-between">
@@ -110,7 +110,7 @@ export function TxTimeline({ transaction }: { transaction: LiveDecisionItem }) {
           {isBlock && (
             <div className="mt-2 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs">
               <p className="font-semibold flex items-center gap-1.5 text-rose-900">
-                <ShieldBan className="h-4 w-4 text-rose-600" />
+                <Ban className="h-4 w-4 text-rose-600" />
                 Interception Rule: {primaryReason?.rule || "Policy Violation"}
               </p>
               <p className="mt-1 text-rose-700 font-mono">
@@ -151,7 +151,7 @@ export function TxTimeline({ transaction }: { transaction: LiveDecisionItem }) {
             ) : isHold ? (
               <Clock className="h-3.5 w-3.5" />
             ) : (
-              <ShieldBan className="h-3.5 w-3.5" />
+              <Ban className="h-3.5 w-3.5" />
             )}
           </span>
 

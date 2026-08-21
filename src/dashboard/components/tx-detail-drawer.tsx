@@ -5,8 +5,8 @@ import Link from "next/link";
 import type { LiveDecisionItem } from "@/dashboard/hooks/useLiveDecisions";
 import {
   X,
-  ShieldAlert,
-  ShieldCheck,
+  AlertOctagon,
+  CheckCircle2,
   Clock,
   ExternalLink,
   Bot,
@@ -66,7 +66,7 @@ export function TxDetailDrawer({ tx, isOpen, onClose }: TxDetailDrawerProps) {
             <div className="flex items-center gap-3">
               {/* Plain icon — no coloured container */}
               {isAllow ? (
-                <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
               ) : isBlock ? (
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" className="h-5 w-5 text-red-500">
                   <line x1="3" y1="3" x2="13" y2="13" /><line x1="13" y1="3" x2="3" y2="13" />

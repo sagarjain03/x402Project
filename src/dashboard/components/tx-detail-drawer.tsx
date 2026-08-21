@@ -119,52 +119,50 @@ export function TxDetailDrawer({ tx, isOpen, onClose }: TxDetailDrawerProps) {
                 </div>
               </div>
 
-              {/* Status Pill */}
-              <span
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold font-mono uppercase tracking-wide ${
-                  isAllow
-                    ? "bg-emerald-100/80 text-emerald-800 border border-emerald-300"
-                    : isBlock
-                    ? "bg-rose-100/80 text-rose-800 border border-rose-300"
-                    : "bg-amber-100/80 text-amber-800 border border-amber-300"
-                }`}
-              >
-                {isAllow ? "✓ ALLOWED" : isBlock ? "⊘ BLOCKED" : "◷ HELD"}
+              {/* Rule 2: Minimal status indicator — dot + neutral text, no coloured pill */}
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold font-mono text-gray-700">
+                <span
+                  className={`h-2 w-2 rounded-full shrink-0 ${
+                    isAllow ? "bg-emerald-500" : isBlock ? "bg-red-500" : "bg-amber-400"
+                  }`}
+                />
+                {isAllow ? "ALLOWED" : isBlock ? "BLOCKED" : "HELD"}
               </span>
             </div>
 
-            {/* Interception Proof (For Blocked) */}
+            {/* Rule 1: BLOCKED info box — white card + left red accent */}
             {isBlock && (
-              <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-200/80 text-xs space-y-2">
-                <div className="flex items-center gap-2 text-rose-900 font-bold">
-                  <AlertOctagon className="h-4 w-4 text-rose-600" />
-                  <span>BLOCKED BEFORE SIGNING</span>
+              <div className="flex items-start gap-3 p-4 rounded-xl border border-gray-100 bg-white border-l-4 border-l-red-500">
+                <AlertOctagon className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-gray-800">BLOCKED BEFORE SIGNING</p>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    This intent was intercepted by the deterministic policy engine before any cryptographic signature or blockchain submission. No transaction was submitted, and no funds left the agent wallet.
+                  </p>
                 </div>
-                <p className="text-rose-700/90 leading-relaxed text-[12px]">
-                  This intent was intercepted by the deterministic policy engine before any cryptographic signature or blockchain submission. No transaction was submitted, and no funds left the agent wallet.
-                </p>
               </div>
             )}
 
-            {/* If Allowed: On-Chain Settlement Info */}
+            {/* Rule 1+3: SETTLED info box — white card + left green accent; hash as plain monospace link */}
             {isAllow && tx.txHash && (
-              <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-xs space-y-2">
-                <div className="flex items-center gap-2 text-emerald-900 font-bold">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <span>SETTLED ON-CHAIN ({networkLabel(tx.network)})</span>
+              <div className="flex items-start gap-3 p-4 rounded-xl border border-gray-100 bg-white border-l-4 border-l-emerald-400">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                <div className="space-y-1 min-w-0">
+                  <p className="text-xs font-bold text-gray-800">SETTLED ON-CHAIN ({networkLabel(tx.network)})</p>
+                  {/* Rule 3: hash as plain monospace text, no background pill */}
+                  <p className="font-mono text-xs text-gray-500 truncate hover:text-gray-900 transition-colors cursor-default" title={tx.txHash}>
+                    {tx.txHash}
+                  </p>
+                  <a
+                    href={explorerTxUrl(tx.network, tx.txHash) ?? "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+                  >
+                    <span>View on {explorerName(tx.network)} Explorer</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
                 </div>
-                <p className="text-emerald-800/90 font-mono text-[11px] truncate">
-                  Tx: {tx.txHash}
-                </p>
-                <a
-                  href={explorerTxUrl(tx.network, tx.txHash) ?? "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline pt-1"
-                >
-                  <span>View on {explorerName(tx.network)} Explorer</span>
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
               </div>
             )}
 

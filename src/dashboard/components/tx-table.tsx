@@ -106,12 +106,6 @@ export function TxTable({
                 { id: "BLOCK", label: "Blocked" },
               ].map((tab) => {
                 const isActive = selectedDecision === tab.id;
-                let activeStyle = "bg-white text-slate-900 shadow-xs font-bold";
-                if (isActive && tab.id === "BLOCK") activeStyle = "bg-rose-50 text-rose-700 shadow-xs border border-rose-200 font-bold";
-                if (isActive && tab.id === "ALLOW") activeStyle = "bg-emerald-50 text-emerald-700 shadow-xs border border-emerald-200 font-bold";
-                if (isActive && tab.id === "HOLD") activeStyle = "bg-amber-50 text-amber-700 shadow-xs border border-amber-200 font-bold";
-                if (isActive && tab.id === "ALL") activeStyle = "bg-blue-50 text-blue-700 shadow-xs border border-blue-200 font-bold";
-
                 return (
                   <button
                     key={tab.id}
@@ -121,7 +115,9 @@ export function TxTable({
                       setCurrentPage(1);
                     }}
                     className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                      isActive ? activeStyle : "text-slate-500 hover:text-slate-800"
+                      isActive
+                        ? "bg-white text-slate-900 shadow-xs font-bold border border-slate-200"
+                        : "text-slate-500 hover:text-slate-800"
                     }`}
                   >
                     {tab.label}
@@ -181,9 +177,7 @@ export function TxTable({
                         handleRowClick(t);
                       }
                     }}
-                    className={`hover:bg-slate-50/80 active:bg-slate-100/70 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:bg-slate-50 transition-all cursor-pointer group select-none ${
-                      isBlock ? "hover:bg-rose-50/20" : isHold ? "hover:bg-amber-50/20" : "hover:bg-blue-50/20"
-                    }`}
+                    className="hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:bg-slate-50 transition-all cursor-pointer group select-none border-b border-gray-100 last:border-b-0"
                   >
                     <TableCell className="py-3.5 px-5 whitespace-nowrap">
                       <Badge
@@ -233,11 +227,11 @@ export function TxTable({
 
                     <TableCell className="py-3.5 px-5 max-w-[260px]">
                       {isAllow ? (
-                        <span className="text-[11px] text-emerald-600 font-mono font-medium">Policy Compliant</span>
+                        <span className="text-xs text-gray-500 font-mono">Policy compliant</span>
                       ) : primaryReason ? (
                         <ReasonChip code={primaryReason.code} message={primaryReason.message} />
                       ) : t.reason ? (
-                        <span className="text-xs text-rose-600 font-mono truncate block" title={t.reason}>
+                        <span className="text-xs text-gray-600 font-mono truncate block" title={t.reason}>
                           {t.reason}
                         </span>
                       ) : (

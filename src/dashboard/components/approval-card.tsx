@@ -157,10 +157,13 @@ export function ApprovalCard({
       {reasons.length > 0 && (
         <ul className="space-y-1.5">
           {reasons.map((reason, i) => (
-            <li key={`${reason.code}-${i}`} className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11px] text-amber-900">
-              <span className="font-mono font-bold">{reason.code}</span>
-              {reason.rule && <span className="font-mono text-amber-700"> · {reason.rule}</span>}
-              <div className="mt-0.5">{reason.message}</div>
+            <li key={`${reason.code}-${i}`} className="flex items-start gap-2.5 p-3 rounded-lg border border-gray-100 bg-white border-l-4 border-l-amber-400">
+              <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+              <div className="text-[11px]">
+                <span className="font-mono font-bold text-gray-800">{reason.code}</span>
+                {reason.rule && <span className="font-mono text-gray-500"> · {reason.rule}</span>}
+                <div className="mt-0.5 text-gray-600">{reason.message}</div>
+              </div>
             </li>
           ))}
         </ul>
@@ -206,10 +209,10 @@ export function ApprovalCard({
       )}
 
       {error && (
-        <Alert variant="destructive" className="p-3 text-xs">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div className="flex items-start gap-2.5 p-4 rounded-lg border border-gray-100 bg-white border-l-4 border-l-red-500">
+          <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-gray-700">{error}</p>
+        </div>
       )}
 
       {outcome ? (

@@ -11,7 +11,6 @@ import type { TransactionRow } from "@/dashboard/hooks/useLiveDecisions";
 import { Bot, Coins, Plus, ShieldAlert, ShieldCheck, TrendingDown, Zap } from "lucide-react";
 import { Card } from "@/dashboard/components/ui/card";
 import { Button } from "@/dashboard/components/ui/button";
-import { Alert, AlertDescription } from "@/dashboard/components/ui/alert";
 import { Progress } from "@/dashboard/components/ui/progress";
 
 interface AgentsApiResponse {
@@ -53,7 +52,7 @@ function Stat({
   icon: React.ReactNode;
 }) {
   return (
-  <Card className="rounded-2xl p-5 shadow-xs transition-all hover:shadow-sm">
+    <Card className="rounded-2xl p-5 shadow-xs transition-all hover:shadow-sm">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
         {icon}
@@ -232,16 +231,17 @@ export function AgentsListPage() {
       </div>
 
       {error && (
-        <Alert variant="destructive" className="p-4">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div className="flex items-start gap-3 p-5 rounded-xl border border-gray-200 bg-white shadow-xs border-l-4 border-l-red-500">
+          <ShieldAlert className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+          <p className="text-sm text-gray-700">{error}</p>
+        </div>
       )}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {loading
           ? [...Array(2)].map((_, i) => (
-              <div key={i} className="h-64 animate-pulse rounded-2xl bg-slate-100" />
-            ))
+            <div key={i} className="h-64 animate-pulse rounded-2xl bg-slate-100" />
+          ))
           : agents.map((agent) => <AgentCard key={agent.id} agent={agent} onStatusChange={load} />)}
       </div>
 

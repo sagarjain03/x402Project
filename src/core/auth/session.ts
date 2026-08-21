@@ -23,13 +23,16 @@ function constantTimeEquals(left: string, right: string): boolean {
 /**
  * ADMIN requires `Authorization: Bearer <ASPG_ADMIN_TOKEN>`.
  *
- * With ASPG_ADMIN_TOKEN unset the dashboard runs open, which is the local demo default and is
- * NOT safe to deploy — set the variable before the dashboard is reachable by anyone else.
+ * With ASPG_ADMIN_TOKEN unset the dashboard runs open. That is the local demo default and stays
+ * that way for `next dev`, but a production build refuses ADMIN outright rather than inheriting
+ * the open default — a deploy that forgot the variable must fail closed, not hand every visitor
+ * the power to approve a payment. Deny by default, CLAUDE.md rule 2.
  */
 export async function requireSession(request: Request, role: Role = "VIEWER"): Promise<Session> {
   const expected = process.env.ASPG_ADMIN_TOKEN;
   const presented = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  const isAdmin = expected ? constantTimeEquals(presented, expected) : true;
+  const openLocally = process.env.NODE_ENV !== "production";
+  const isAdmin = expected ? constantTimeEquals(presented, expected) : openLocally;
 
   if (role === "ADMIN" && !isAdmin) throw new ForbiddenError();
 

@@ -9,7 +9,11 @@ import { PREMIUM_REPORT_EDITIONS } from "@/demo/sandbox/pricing";
 import { waitForVelocityHeadroom } from "@/demo/simulator/velocity";
 
 const POLL_INTERVAL_MS = 3_000;
-const APPROVAL_WAIT_MS = 5 * 60_000;
+// A serverless function is killed at its own ceiling — 60s on Vercel Hobby — so a five minute wait
+// never reports the scenario's message, it returns a 504 with no transcript at all. The default
+// fits inside that and still leaves a presenter ample time to click approve. Raise
+// D7_APPROVAL_WAIT_MS wherever the function ceiling is higher.
+const APPROVAL_WAIT_MS = Number(process.env.D7_APPROVAL_WAIT_MS ?? 45_000);
 
 /** GET /api/v1/payments/:id returns { payment: { approval: { status } } } — API_DOCS 5.5. */
 function readApprovalStatus(payload: unknown): string | undefined {
@@ -29,7 +33,7 @@ async function waitForApproval(intentId: string, log: (line: string) => void): P
     }
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
-  throw new Error("[D7] nobody approved within 5 minutes");
+  throw new Error(`[D7] nobody approved within ${Math.round(APPROVAL_WAIT_MS / 1000)}s`);
 }
 
 export async function run(log: (line: string) => void = console.log): Promise<void> {

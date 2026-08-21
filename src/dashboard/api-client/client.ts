@@ -30,9 +30,43 @@ export class ApiClientError extends Error {
   }
 }
 
+const ADMIN_TOKEN_KEY = "aspg.adminToken";
+
+/**
+ * A deployed guard refuses ADMIN without `Authorization: Bearer <ASPG_ADMIN_TOKEN>`, so freezing an
+ * agent or approving a held payment needs the token in the browser. It is deliberately NOT a
+ * NEXT_PUBLIC_ variable: that would bake it into every bundle and hand it to every visitor.
+ *
+ * The operator arrives once at `?admin=<token>`; it moves to sessionStorage and is stripped from
+ * the URL so it does not survive in the address bar, a screenshot, or a copied link. Everyone else
+ * gets a read-only dashboard, which is the correct default for a public demo.
+ */
+export function readAdminToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const url = new URL(window.location.href);
+    const fromUrl = url.searchParams.get("admin");
+    if (fromUrl) {
+      window.sessionStorage.setItem(ADMIN_TOKEN_KEY, fromUrl);
+      url.searchParams.delete("admin");
+      window.history.replaceState(null, "", url.toString());
+      return fromUrl;
+    }
+    return window.sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  } catch {
+    // Private-browsing sessionStorage throws. A read-only dashboard is the safe degradation.
+    return null;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   headers.set("Accept", "application/json");
+
+  const adminToken = readAdminToken();
+  if (adminToken && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${adminToken}`);
+  }
 
   if (init?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");

@@ -1,6 +1,7 @@
 // OWNER: CORE. Does the I/O the engine refuses to do, then calls the pure engine.
 // Fails closed: every path out of here that is not a clean evaluation is a BLOCK.
 import { writeAudit } from "@/core/audit/log";
+import { sweepExpiredReservations } from "@/core/budget/ledger";
 import {
   findByIdempotencyKey,
   getActivePolicy,
@@ -159,6 +160,12 @@ export async function evaluatePayment(input: EvaluatePaymentInput): Promise<Eval
     ]);
 
     const now = new Date();
+    // getSpendCounters sums RESERVE - COMMIT - RELEASE with no expiry predicate, so a reservation
+    // whose TTL elapsed without settling still holds budget until something releases it. The cron
+    // cannot be that something on every plan — Vercel Hobby allows one run a day — so the sweep
+    // happens here, on the one path whose answer depends on it. Indexed on expires_at, and a
+    // no-op in the normal case where nothing has expired.
+    await sweepExpiredReservations();
     const counters = await getSpendCounters(intent.agentId, intent.merchant, now);
 
     const merchantRules = policyRow?.rules.merchant;

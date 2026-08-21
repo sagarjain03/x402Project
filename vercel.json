@@ -3,12 +3,12 @@
   "crons": [
     {
       "path": "/api/v1/cron/sweep",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 3 * * *"
     }
   ],
   "functions": {
     "app/api/v1/simulator/run/route.ts": {
-      "maxDuration": 300
+      "maxDuration": 60
     },
     "app/api/v1/console/run/route.ts": {
       "maxDuration": 60

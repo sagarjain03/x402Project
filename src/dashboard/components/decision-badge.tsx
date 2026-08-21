@@ -3,7 +3,7 @@
 /** OWNER: UI · 🟢 ALLOW / 🟡 HOLD / 🔴 BLOCK chip. */
 import type { Decision } from "@/shared/types";
 import { CheckCircle2, AlertTriangle, ShieldBan } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/dashboard/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export function DecisionBadge({

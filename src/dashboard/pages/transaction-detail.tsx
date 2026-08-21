@@ -96,7 +96,10 @@ export function TransactionDetailPage() {
   };
 
   useEffect(() => {
-    void loadDetail();
+    // Kicked off in a microtask: the loader sets state before its first await, and doing that
+    // synchronously inside an effect updates state mid-commit.
+    void Promise.resolve().then(() => loadDetail());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intentId]);
 
   const handleApprove = async () => {

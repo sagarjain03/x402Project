@@ -13,7 +13,7 @@ export type HeroProps = {
 
 export function Hero({
   title = "WARDEN",
-  subtitle = "Control autonomous payments",
+  subtitle = "Deterministic policy enforcement and a cryptographic audit trail for autonomous agent spend on Algorand TestNet.",
   withShader = false,
 }: HeroProps) {
   const scrollToOverview = () => {
@@ -89,7 +89,7 @@ export function Hero({
 
           {/* Tagline */}
           <p className="mt-3 text-lg sm:text-xl md:text-2xl text-blue-900 font-semibold tracking-wide drop-shadow-[0_1px_8px_rgba(255,255,255,0.7)] max-w-2xl leading-relaxed">
-            {subtitle || "Deterministic policy enforcement gateway & cryptographic audit trail for autonomous agent spend on Algorand TestNet."}
+            {subtitle}
           </p>
 
           {/* Action Pill Buttons */}
@@ -121,13 +121,11 @@ export function Hero({
         {/* Right Column: Modern Glassmorphic Video Showcase Card */}
         <div className="flex-1 w-full max-w-lg lg:max-w-xl flex justify-center lg:justify-end">
           <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-slate-900/40 backdrop-blur-md border border-white/40 shadow-2xl shadow-blue-950/25 animate-float transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-blue-500/20 hover:border-white/60">
-            <video
-              src="/video.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="metadata"
+            {/* No video asset ships in public/ yet. Showing the artwork that does exist beats a
+                404 and an empty black card on the first screen of the demo. */}
+            <img
+              src="/warden-agent-image.jpeg"
+              alt="An autonomous agent offers a payment; the Warden approves it and refuses the next one."
               className="w-full h-full object-cover"
             />
             {/* Subtle inner highlight border */}

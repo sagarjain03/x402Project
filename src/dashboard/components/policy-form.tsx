@@ -37,7 +37,7 @@ export function PolicyForm({
     merchant: {
       allowedMerchants: ["localhost:3000"],
       blockedMerchants: ["rogue.example.com"],
-      pinnedRecipients: { "localhost:3000": "0x9a2B4c6D8e0F1a3B5c7D9e1F2a4B6c8D0e2F4a6B" },
+      pinnedRecipients: {},
       unknownMerchantAction: "BLOCK",
       enforceRecipientPinning: true,
     },
@@ -48,7 +48,7 @@ export function PolicyForm({
     },
     rail: {
       allowedNetworks: ["algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI="],
-      allowedAssets: ["USDC"],
+      allowedAssets: ["10458941"],
     },
     risk: {
       autoApproveBelowUsd: "0.10",
@@ -253,22 +253,7 @@ export function PolicyForm({
           Risk Scoring & Review Band
         </h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label className="text-xs text-zinc-500 font-medium">Auto-Approve Below ($)</label>
-            <input
-              type="text"
-              value={rules.risk.autoApproveBelowUsd}
-              onChange={(e) =>
-                updateRules({
-                  ...rules,
-                  risk: { ...rules.risk, autoApproveBelowUsd: e.target.value },
-                })
-              }
-              className="mt-1 w-full px-3 py-2 text-xs font-mono bg-zinc-50 border border-zinc-200 rounded-lg"
-            />
-          </div>
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs text-zinc-500 font-medium">HOLD Review Band ($ - $)</label>
             <div className="flex items-center gap-2 mt-1">

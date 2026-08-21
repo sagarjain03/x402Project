@@ -9,10 +9,10 @@ import { DecisionBar, type DecisionMixRow } from "@/dashboard/charts/decision-ba
 import { BudgetBars, type BudgetBarRow } from "@/dashboard/charts/budget-bars";
 import type { TransactionRow } from "@/dashboard/hooks/useLiveDecisions";
 import { Bot, Coins, Plus, ShieldAlert, ShieldCheck, TrendingDown, Zap } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
+import { Card } from "@/dashboard/components/ui/card";
+import { Button } from "@/dashboard/components/ui/button";
+import { Alert, AlertDescription } from "@/dashboard/components/ui/alert";
+import { Progress } from "@/dashboard/components/ui/progress";
 
 interface AgentsApiResponse {
   agents: AgentRow[];

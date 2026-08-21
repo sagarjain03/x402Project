@@ -9,10 +9,10 @@ import { formatCountdown, secondsLeft, type ApprovalItem } from "@/dashboard/hoo
 import { resourceLabel } from "@/dashboard/resource-label";
 import { networkLabel } from "@/shared/explorer";
 import { AlertCircle, ArrowRight, CheckCircle2, Clock, Hourglass, XCircle } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card } from "@/dashboard/components/ui/card";
+import { Badge } from "@/dashboard/components/ui/badge";
+import { Button } from "@/dashboard/components/ui/button";
+import { Alert, AlertDescription } from "@/dashboard/components/ui/alert";
 import { cn } from "@/lib/utils";
 
 /**

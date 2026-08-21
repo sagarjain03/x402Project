@@ -14,8 +14,8 @@ import {
   FileText,
   User,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/dashboard/components/ui/button";
+import { Input } from "@/dashboard/components/ui/input";
 
 interface AuditEntry {
   id?: string;
@@ -80,7 +80,10 @@ export function AuditPage() {
   };
 
   useEffect(() => {
-    void loadAudit();
+    // Kicked off in a microtask: the loader sets state before its first await, and doing that
+    // synchronously inside an effect updates state mid-commit.
+    void Promise.resolve().then(() => loadAudit());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleVerifyNow = async () => {

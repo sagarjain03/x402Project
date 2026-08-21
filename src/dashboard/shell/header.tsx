@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Activity, Menu, Shield, X } from "lucide-react";
 import { ApprovalsBell } from "@/dashboard/components/approvals-bell";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/dashboard/components/ui/badge";
 
 export const TOP_NAV = [
   { href: "/overview", label: "Overview" },
@@ -65,7 +65,7 @@ export function Header() {
           className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 font-mono text-[11px] font-semibold"
         >
           <Activity className="h-3 w-3 text-emerald-600 animate-pulse" />
-          Gateway Live
+          Algorand TestNet
         </Badge>
 
         {/* Mobile Hamburger Button */}

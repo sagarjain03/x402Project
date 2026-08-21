@@ -11,10 +11,11 @@ import {
   ShieldCheck,
   Wallet,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/dashboard/components/ui/card";
+import { Badge } from "@/dashboard/components/ui/badge";
+import { Progress } from "@/dashboard/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { networkLabel } from "@/shared/explorer";
 
 export interface AgentItem {
   id: string;
@@ -23,6 +24,8 @@ export interface AgentItem {
   status: "ACTIVE" | "FROZEN";
   /** Null until a wallet is attached. A freshly registered agent has none. */
   walletAddress: string | null;
+  /** The rail this agent's wallet is funded on, so a card never implies the wrong chain. */
+  walletNetwork: string | null;
   walletAllowanceCapUsd: string;
   walletFundedUsd: string;
   /**
@@ -64,6 +67,7 @@ export function toAgentItem(row: AgentRow, activePolicyVersion = 0): AgentItem {
     description: row.description,
     status: row.status,
     walletAddress: row.wallet.address ?? null,
+    walletNetwork: row.wallet.network ?? null,
     walletAllowanceCapUsd: row.wallet.allowanceCapUsd,
     walletFundedUsd: row.wallet.fundedUsd,
     spentUsd: null,
@@ -171,6 +175,13 @@ export function AgentCard({ agent, onStatusChange }: { agent: AgentItem; onStatu
               {agent.walletAddress
                 ? `${agent.walletAddress.slice(0, 6)}…${agent.walletAddress.slice(-4)}`
                 : "not attached"}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between text-zinc-500">
+            <span>Network</span>
+            <span className="font-mono font-medium text-zinc-800">
+              {networkLabel(agent.walletNetwork)}
             </span>
           </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/dashboard/components/ui/button";
 
 interface ErrorCardProps {
   title?: string;

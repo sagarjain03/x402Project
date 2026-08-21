@@ -21,10 +21,10 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from "@/dashboard/components/ui/table";
+import { Badge } from "@/dashboard/components/ui/badge";
+import { Button } from "@/dashboard/components/ui/button";
+import { Input } from "@/dashboard/components/ui/input";
 
 function formatRelativeTime(dateStr: string, nowMs = Date.now()): string {
   const diffMs = Math.max(0, nowMs - new Date(dateStr).getTime());

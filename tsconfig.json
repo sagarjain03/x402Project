@@ -41,9 +41,6 @@
       "@/demo/*": [
         "./src/demo/*"
       ],
-      "@/components/*": [
-        "./src/components/*"
-      ],
       "@/lib/*": [
         "./lib/*"
       ],

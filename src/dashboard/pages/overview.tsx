@@ -155,7 +155,7 @@ export function OverviewPage() {
     async function loadMetrics() {
       try {
         setLoading(true);
-        const data = await apiGet<MetricsSummary>(API.metrics);
+        const data = await apiGet<MetricsSummary>(`${API.metrics}?window=720`);
         if (data) {
           setMetrics(data);
         }
@@ -215,7 +215,7 @@ export function OverviewPage() {
                 Overview
               </h2>
               <p className="text-sm text-slate-500 mt-1">
-                Real-time policy guard decisions and on-chain prevention metrics for the last 24h.
+                Policy guard decisions and on-chain prevention metrics over the last 30 days.
               </p>
             </div>
 
@@ -237,7 +237,7 @@ export function OverviewPage() {
                 message={error || "Failed to communicate with the policy engine metrics endpoint."}
                 onRetry={() => {
                   setLoading(true);
-                  apiGet<MetricsSummary>(API.metrics)
+                  apiGet<MetricsSummary>(`${API.metrics}?window=720`)
                     .then((data) => {
                       if (data) setMetrics(data);
                     })
@@ -260,7 +260,7 @@ export function OverviewPage() {
                           <DollarSign className="h-4 w-4" />
                         </div>
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                          Spend Today
+                          Spend Settled
                         </span>
                       </div>
 
@@ -321,7 +321,7 @@ export function OverviewPage() {
                           <ShieldCheck className="h-4 w-4" />
                         </div>
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                          Blocked On-Chain
+                          Blocked, Yet On-Chain
                         </span>
                       </div>
 
@@ -374,7 +374,7 @@ export function OverviewPage() {
                     {/* Header */}
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold text-xs text-slate-900 uppercase tracking-wider font-sans">
-                        Decision Distribution ({metrics?.windowHours ?? 24}H)
+                        Decision Distribution ({metrics ? Math.round(metrics.windowHours / 24) : "—"}D)
                       </h3>
                       <span className="text-xs font-semibold text-slate-500">
                         Total: {totalDecisions}
@@ -464,7 +464,7 @@ export function OverviewPage() {
                     {/* Header */}
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold text-xs text-slate-900 uppercase tracking-wider font-sans">
-                        Top Blocked Rules ({metrics?.windowHours ?? 24}H)
+                        Top Blocked Rules ({metrics ? Math.round(metrics.windowHours / 24) : "—"}D)
                       </h3>
                       <span className="text-xs text-slate-400">Ranked by frequency</span>
                     </div>

@@ -122,14 +122,14 @@ export function AgentDetailPage() {
         // and `wallet`. Assigning either envelope directly leaves every field undefined.
         const [agentData, budgetData, history] = await Promise.all([
           apiGet<{ agent: AgentRow; policy?: { version: number } }>(API.agent(agentId)),
-          apiGet<BudgetResponse>(API.budgets(agentId)),
+          apiGet<BudgetResponse>(API.budgets(agentId)).catch(() => null),
           apiGet<{ transactions: TransactionRow[] }>(
             `${API.transactions}?agentId=${agentId}&limit=200`,
           ).catch(() => null),
         ]);
         setAgent(toAgentItem(agentData.agent, agentData.policy?.version ?? 0));
         setWalletNetwork(agentData.agent.wallet?.network ?? null);
-        setBudget(toFlatBudget(budgetData));
+        setBudget(budgetData ? toFlatBudget(budgetData) : null);
 
         // Cumulative spend, oldest first, counting only payments that actually reached the chain.
         // Cents as integers: a running total of decimal strings drifts within a dozen rows.
@@ -326,7 +326,7 @@ export function AgentDetailPage() {
           <BudgetGauge
             label="Hourly Budget Window"
             spent={budget?.hourSpentUsd || "0.08"}
-            budget={budget?.hourlyBudgetUsd || "1.00"}
+            budget={budget?.hourlyBudgetUsd ?? "0.00"}
             reserved={budget?.reservedUsd || "0.00"}
           />
           <BudgetGauge
@@ -358,7 +358,7 @@ export function AgentDetailPage() {
               Allowance Cap Remaining
             </span>
             <span className="font-mono font-bold text-zinc-900">
-              ${budget?.walletAllowanceRemainingUsd || "23.65"} / ${agent.walletAllowanceCapUsd}
+              {budget ? `$${budget.walletAllowanceRemainingUsd}` : "—"} / ${agent.walletAllowanceCapUsd}
             </span>
           </div>
           <div className="h-2.5 w-full bg-zinc-100 rounded-full overflow-hidden">

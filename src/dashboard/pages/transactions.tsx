@@ -5,6 +5,7 @@ import { apiGet } from "@/dashboard/api-client/client";
 import { API } from "@/dashboard/api-client/endpoints";
 import { TxTable } from "@/dashboard/components/tx-table";
 import { FundFlow } from "@/dashboard/components/fund-flow";
+import { ErrorCard } from "@/dashboard/components/error-card";
 import { toFeedItem, type LiveDecisionItem, type TransactionRow } from "@/dashboard/hooks/useLiveDecisions";
 import {
   ArrowLeftRight,
@@ -13,13 +14,8 @@ import {
   Shield,
   FileText,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-
-interface MetricsSummary {
-  windowHours: number;
-  blockedUsd: string;
-}
+import { Card } from "@/dashboard/components/ui/card";
+import { Progress } from "@/dashboard/components/ui/progress";
 
 interface TransactionsApiResponse {
   transactions: TransactionRow[];
@@ -32,20 +28,17 @@ interface AgentsApiResponse {
 
 export function TransactionsPage() {
   const [transactions, setTransactions] = useState<LiveDecisionItem[]>([]);
-  const [metrics, setMetrics] = useState<MetricsSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadTransactions = useCallback(async () => {
       try {
         setLoading(true);
-        // Money protected is measured over the guard's window by CORE, so it comes from the
-        // metrics endpoint rather than being derived from whichever page of rows loaded here.
         // The transactions endpoint returns agentId, not the name, so the roster is fetched once
         // and joined here. A failure leaves agentName undefined and the table falls back to the id,
         // which is the point: a row must never display an agent it cannot actually identify.
-        const [data, summary, roster] = await Promise.all([
+        const [data, roster] = await Promise.all([
           apiGet<TransactionsApiResponse>(`${API.transactions}?limit=200`),
-          apiGet<MetricsSummary>(API.metrics).catch(() => null),
           apiGet<AgentsApiResponse>(API.agents).catch(() => null),
         ]);
         const names = new Map((roster?.agents ?? []).map((agent) => [agent.agentId, agent.name]));
@@ -53,9 +46,9 @@ export function TransactionsPage() {
           ...toFeedItem(row),
           agentName: names.get(row.agentId),
         })));
-        setMetrics(summary);
+        setError(null);
       } catch (err) {
-        console.error("[transactions] load failed:", err);
+        setError(err instanceof Error ? err.message : "Could not load transactions.");
       } finally {
         setLoading(false);
       }
@@ -78,8 +71,14 @@ export function TransactionsPage() {
   const blockPct = total > 0 ? Math.round((blockCount / total) * 100) : 0;
   const holdPct = total > 0 ? Math.round((holdCount / total) * 100) : 0;
 
-  const blockedUsd = metrics?.blockedUsd ?? "0.00";
-  const windowHours = metrics?.windowHours ?? 24;
+  // Cents as integers, from the rows the table is showing. The metrics endpoint measures a
+  // 24-hour window while this table has none, so reading blockedUsd from it put "$0.00" directly
+  // above ten visible BLOCKED rows.
+  const blockedUsd = (
+    transactions
+      .filter((t) => t.decision === "BLOCK")
+      .reduce((acc, t) => acc + Math.round(Number(t.amountUsd) * 100), 0) / 100
+  ).toFixed(2);
 
   return (
     <div className="space-y-8 font-sans">
@@ -119,7 +118,7 @@ export function TransactionsPage() {
                 {total}
               </div>
               <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                <span>Last {windowHours}h</span>
+                <span>All recorded</span>
               </p>
             </div>
           </div>
@@ -215,6 +214,14 @@ export function TransactionsPage() {
           </div>
         </Card>
       </div>
+
+      {error && (
+        <ErrorCard
+          title="Could not load transactions"
+          message={error}
+          onRetry={() => void loadTransactions()}
+        />
+      )}
 
       {/* Sender -> merchant balances and the settled transfers between them */}
       <FundFlow transactions={transactions} loading={loading} onRefresh={loadTransactions} />

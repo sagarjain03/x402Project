@@ -44,7 +44,9 @@ export function formatCountdown(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-export function usePendingApprovals(pollMs = 20_000) {
+export function usePendingApprovals(
+  { pollMs = 20_000, enabled = true }: { pollMs?: number; enabled?: boolean } = {},
+) {
   const [approvals, setApprovals] = useState<ApprovalItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,12 +88,13 @@ export function usePendingApprovals(pollMs = 20_000) {
   }, []);
 
   useEffect(() => {
+    if (!enabled) return;
     // Kicked off in a microtask: the loader sets state before its first await, and doing that
     // synchronously inside an effect updates state mid-commit.
     void Promise.resolve().then(load);
     const id = setInterval(load, pollMs);
     return () => clearInterval(id);
-  }, [load, pollMs]);
+  }, [load, pollMs, enabled]);
 
   useEffect(() => {
     // Only tick countdown when there are active items with deadlines

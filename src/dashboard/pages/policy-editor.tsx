@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ErrorCard } from "@/dashboard/components/error-card";
 import { useParams } from "next/navigation";
 import { apiGet, apiPost } from "@/dashboard/api-client/client";
 import { API } from "@/dashboard/api-client/endpoints";
@@ -35,6 +36,9 @@ export function PolicyEditorPage() {
   const [versions, setVersions] = useState<Policy[]>([]);
   const [activeTab, setActiveTab] = useState<"simulate" | "form" | "json" | "history">("simulate");
   const [loading, setLoading] = useState(true);
+  // A failed load used to be swallowed, leaving the form showing its hardcoded defaults as though
+  // they were this agent's live policy — which 'Create Immutable Version' would then write.
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<number>(3);
 
   // Simulation state
@@ -60,8 +64,9 @@ export function PolicyEditorPage() {
         setVersions(vers.versions);
         setSelectedVersion(current?.policy?.version ?? 1);
       }
+      setLoadError(null);
     } catch (err) {
-      console.error(err);
+      setLoadError(err instanceof Error ? err.message : "Could not load this agent's policy.");
     }
   };
 
@@ -97,6 +102,14 @@ export function PolicyEditorPage() {
 
   return (
     <div className="space-y-8">
+      {loadError && (
+        <ErrorCard
+          title="Could not load this agent's policy"
+          message={`${loadError} The rules below are defaults, not this agent's live policy — do not save them.`}
+          onRetry={() => void loadPolicy()}
+        />
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

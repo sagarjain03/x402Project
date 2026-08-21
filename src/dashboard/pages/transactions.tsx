@@ -12,9 +12,9 @@ import {
   ShieldBan,
   Shield,
   FileText,
-  Calendar,
-  Filter,
 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 interface MetricsSummary {
   windowHours: number;
@@ -96,29 +96,12 @@ export function TransactionsPage() {
             Every payment intent evaluated, enforced, and recorded by WARDEN.
           </p>
         </div>
-
-        {/* Right Header Buttons: Date Pill & Filter */}
-        <div className="flex items-center gap-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 shadow-2xs">
-            <Calendar className="h-3.5 w-3.5 text-slate-500" />
-            <span>Last 24 hours</span>
-            <span className="text-slate-400">∨</span>
-          </div>
-
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 shadow-2xs transition-colors cursor-pointer"
-          >
-            <Filter className="h-3.5 w-3.5 text-slate-500" />
-            <span>Filters</span>
-          </button>
-        </div>
       </div>
 
       {/* 4 Redesigned Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* 1. Total Intents */}
-        <div className="bg-white rounded-[22px] border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
+        <Card className="rounded-[22px] p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
           <div className="space-y-3">
             {/* Icon + Eyebrow */}
             <div className="flex items-center gap-2.5">
@@ -140,34 +123,10 @@ export function TransactionsPage() {
               </p>
             </div>
           </div>
-
-          {/* Blue Wave Sparkline */}
-          <div className="mt-4 -mx-5 -mb-5 h-11 w-[calc(100%+40px)] overflow-hidden pointer-events-none opacity-85">
-            <svg viewBox="0 0 300 60" className="w-full h-full" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="tx-blue-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 0,45 C 50,55 90,30 140,40 C 190,50 240,15 300,20 L 300,60 L 0,60 Z"
-                fill="url(#tx-blue-grad)"
-              />
-              <path
-                d="M 0,45 C 50,55 90,30 140,40 C 190,50 240,15 300,20"
-                fill="none"
-                stroke="#3b82f6"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-              <circle cx="300" cy="20" r="3.5" fill="#3b82f6" />
-            </svg>
-          </div>
-        </div>
+        </Card>
 
         {/* 2. Money Protected (Strongest Card) */}
-        <div className="bg-white rounded-[22px] border border-emerald-200/80 p-5 shadow-sm hover:shadow transition-all flex flex-col justify-between relative overflow-hidden group bg-gradient-to-br from-white via-emerald-50/20 to-emerald-50/40">
+        <Card className="rounded-[22px] border-emerald-200/80 p-5 shadow-sm hover:shadow transition-all flex flex-col justify-between relative overflow-hidden group bg-gradient-to-br from-white via-emerald-50/20 to-emerald-50/40">
           <div className="space-y-3">
             {/* Icon + Eyebrow */}
             <div className="flex items-center gap-2.5">
@@ -189,34 +148,10 @@ export function TransactionsPage() {
               </p>
             </div>
           </div>
-
-          {/* Emerald Wave Sparkline */}
-          <div className="mt-4 -mx-5 -mb-5 h-11 w-[calc(100%+40px)] overflow-hidden pointer-events-none">
-            <svg viewBox="0 0 300 60" className="w-full h-full" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="tx-emerald-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 0,55 C 50,52 90,40 140,45 C 190,50 240,20 300,25 L 300,60 L 0,60 Z"
-                fill="url(#tx-emerald-grad)"
-              />
-              <path
-                d="M 0,55 C 50,52 90,40 140,45 C 190,50 240,20 300,25"
-                fill="none"
-                stroke="#10b981"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-              <circle cx="300" cy="25" r="3.5" fill="#10b981" />
-            </svg>
-          </div>
-        </div>
+        </Card>
 
         {/* 3. Allowed */}
-        <div className="bg-white rounded-[22px] border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
+        <Card className="rounded-[22px] p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
           <div className="space-y-3">
             {/* Icon + Eyebrow */}
             <div className="flex items-center gap-2.5">
@@ -240,16 +175,13 @@ export function TransactionsPage() {
           </div>
 
           {/* Green Progress Bar */}
-          <div className="mt-4 w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-            <div
-              className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${allowPct}%` }}
-            />
+          <div className="mt-4">
+            <Progress value={allowPct} indicatorClassName="bg-emerald-500" />
           </div>
-        </div>
+        </Card>
 
         {/* 4. Blocked / Held */}
-        <div className="bg-white rounded-[22px] border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
+        <Card className="rounded-[22px] p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
           <div className="space-y-3">
             {/* Icon + Eyebrow */}
             <div className="flex items-center gap-2.5">
@@ -274,20 +206,14 @@ export function TransactionsPage() {
 
           {/* Red & Amber Split Progress Bars */}
           <div className="mt-4 flex gap-1.5 w-full">
-            <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
-              <div
-                className="bg-rose-500 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, blockPct * 2)}%` }}
-              />
+            <div className="flex-1">
+              <Progress value={blockPct} indicatorClassName="bg-rose-500" />
             </div>
-            <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
-              <div
-                className="bg-amber-500 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, holdPct * 4)}%` }}
-              />
+            <div className="flex-1">
+              <Progress value={holdPct} indicatorClassName="bg-amber-500" />
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Sender -> merchant balances and the settled transfers between them */}

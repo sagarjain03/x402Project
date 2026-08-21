@@ -11,7 +11,7 @@ const addSchema = z.object({
   agentId: z.string().min(1),
   merchant: z.string().min(1).max(255),
   list: z.enum(["allowed", "blocked"]).default("allowed"),
-  pinnedRecipient: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+  pinnedRecipient: z.string().regex(/^([A-Z2-7]{58}|0x[a-fA-F0-9]{40})$/i).optional(),
   updatedByEmail: z.string().email().optional(),
 });
 

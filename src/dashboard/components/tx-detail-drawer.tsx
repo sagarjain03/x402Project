@@ -133,15 +133,15 @@ export function TxDetailDrawer({ tx, isOpen, onClose }: TxDetailDrawerProps) {
               </span>
             </div>
 
-            {/* Zero-Gas Interception Proof (For Blocked) */}
+            {/* Interception Proof (For Blocked) */}
             {isBlock && (
               <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-200/80 text-xs space-y-2">
                 <div className="flex items-center gap-2 text-rose-900 font-bold">
                   <AlertOctagon className="h-4 w-4 text-rose-600" />
-                  <span>BLOCKED BEFORE SIGNING (Zero-Gas Interception)</span>
+                  <span>BLOCKED BEFORE SIGNING</span>
                 </div>
                 <p className="text-rose-700/90 leading-relaxed text-[12px]">
-                  This intent was intercepted by the deterministic policy engine before any cryptographic signature or EVM RPC call. No gas was consumed, and no funds left the agent wallet.
+                  This intent was intercepted by the deterministic policy engine before any cryptographic signature or blockchain submission. No transaction was submitted, and no funds left the agent wallet.
                 </p>
               </div>
             )}
@@ -181,8 +181,8 @@ export function TxDetailDrawer({ tx, isOpen, onClose }: TxDetailDrawerProps) {
 
                 <div className="flex items-center justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500 font-medium">Triggered Rule</span>
-                  <span className="font-semibold text-rose-600 font-mono">
-                    {primaryReason?.code || (isAllow ? "POLICY_COMPLIANT" : "PENDING_REVIEW")}
+                  <span className={`font-semibold font-mono ${isBlock ? "text-rose-600" : "text-slate-700"}`}>
+                    {primaryReason?.code || (isAllow ? "—" : "PENDING_REVIEW")}
                   </span>
                 </div>
 
@@ -196,7 +196,7 @@ export function TxDetailDrawer({ tx, isOpen, onClose }: TxDetailDrawerProps) {
                 <div className="flex items-center justify-between py-1">
                   <span className="text-slate-500 font-medium">Engine Latency</span>
                   <span className="font-mono font-semibold text-amber-600">
-                    {tx.latencyMs ? `${tx.latencyMs.toFixed(3)} ms` : "0.054 ms"}
+                    {tx.latencyMs !== undefined && tx.latencyMs !== null ? `${tx.latencyMs.toFixed(3)} ms` : "—"}
                   </span>
                 </div>
               </div>

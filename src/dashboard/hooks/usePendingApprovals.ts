@@ -94,9 +94,15 @@ export function usePendingApprovals(pollMs = 20_000) {
   }, [load, pollMs]);
 
   useEffect(() => {
+    // Only tick countdown when there are active items with deadlines
+    const hasActiveDeadlines = approvals.some(
+      (item) => item.expiresAtMs !== null && item.expiresAtMs > Date.now()
+    );
+    if (!hasActiveDeadlines) return;
+
     const id = setInterval(() => setNowMs(Date.now()), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [approvals]);
 
   // Dropped locally the moment a reviewer acts, so the card disappears without waiting for the
   // next poll. The next poll is what confirms it: if the write failed, the row comes straight back.

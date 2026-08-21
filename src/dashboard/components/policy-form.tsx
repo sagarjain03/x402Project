@@ -10,8 +10,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   AlertCircle,
-  Bug,
   Shield,
+  Globe,
 } from "lucide-react";
 
 export function PolicyForm({
@@ -89,35 +89,6 @@ export function PolicyForm({
         setServerError(err.message);
       } else {
         setServerError(err instanceof Error ? err.message : "Validation failed on server.");
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleTestInvalid = async () => {
-    setSaving(true);
-    setServerError(null);
-    setSuccessMessage(null);
-
-    try {
-      // Intentionally invalid: max per tx ($5.00) > hourly budget ($1.00)
-      await apiPost(API.policies, {
-        agentId,
-        rules: {
-          ...rules,
-          financial: {
-            ...rules.financial,
-            maxPerTransactionUsd: "5.00",
-            hourlyBudgetUsd: "1.00",
-          },
-        },
-      });
-    } catch (err) {
-      if (err instanceof ApiClientError) {
-        setServerError(err.message);
-      } else {
-        setServerError(err instanceof Error ? err.message : "Validation rejected.");
       }
     } finally {
       setSaving(false);
@@ -350,18 +321,104 @@ export function PolicyForm({
         </div>
       </div>
 
+      {/* 4. Merchant Allowlist & Recipient Pinning Rules */}
+      <div className="bg-white rounded-xl border border-zinc-200 p-6 shadow-sm space-y-4">
+        <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+          <Globe className="h-4 w-4 text-blue-600" />
+          Merchant Allowlists & Recipient Pinning
+        </h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs text-zinc-500 font-medium">Allowed Merchants (comma-separated)</label>
+            <input
+              type="text"
+              value={rules.merchant.allowedMerchants.join(", ")}
+              onChange={(e) =>
+                updateRules({
+                  ...rules,
+                  merchant: {
+                    ...rules.merchant,
+                    allowedMerchants: e.target.value
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  },
+                })
+              }
+              className="mt-1 w-full px-3 py-2 text-xs font-mono bg-zinc-50 border border-zinc-200 rounded-lg"
+              placeholder="e.g. localhost:3000, api.weather.com"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-zinc-500 font-medium">Blocked Merchants (comma-separated)</label>
+            <input
+              type="text"
+              value={rules.merchant.blockedMerchants.join(", ")}
+              onChange={(e) =>
+                updateRules({
+                  ...rules,
+                  merchant: {
+                    ...rules.merchant,
+                    blockedMerchants: e.target.value
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  },
+                })
+              }
+              className="mt-1 w-full px-3 py-2 text-xs font-mono bg-zinc-50 border border-zinc-200 rounded-lg"
+              placeholder="e.g. rogue.example.com"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-zinc-500 font-medium">Action for Unknown Merchants (Deny-by-Default)</label>
+            <select
+              value={rules.merchant.unknownMerchantAction}
+              onChange={(e) =>
+                updateRules({
+                  ...rules,
+                  merchant: {
+                    ...rules.merchant,
+                    unknownMerchantAction: e.target.value as "BLOCK" | "HOLD",
+                  },
+                })
+              }
+              className="mt-1 w-full px-3 py-2 text-xs font-mono bg-zinc-50 border border-zinc-200 rounded-lg"
+            >
+              <option value="BLOCK">BLOCK (Strict Refusal)</option>
+              <option value="HOLD">HOLD (Escalate to Human Review)</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2 pt-6">
+            <input
+              type="checkbox"
+              id="enforceRecipientPinning"
+              checked={rules.merchant.enforceRecipientPinning ?? true}
+              onChange={(e) =>
+                updateRules({
+                  ...rules,
+                  merchant: {
+                    ...rules.merchant,
+                    enforceRecipientPinning: e.target.checked,
+                  },
+                })
+              }
+              className="h-4 w-4 text-blue-600 rounded border-zinc-300"
+            />
+            <label htmlFor="enforceRecipientPinning" className="text-xs font-medium text-zinc-700 cursor-pointer">
+              Enforce Pinned Recipient Validation (Addresses must match allowlist)
+            </label>
+          </div>
+        </div>
+      </div>
+
       {/* Buttons */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handleTestInvalid}
-            disabled={saving}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 text-xs font-semibold rounded-lg transition-colors disabled:opacity-60"
-          >
-            <Bug className="h-3.5 w-3.5 text-rose-600" />
-            <span>Test Server Validation Rejection</span>
-          </button>
           {onSimulateClick && (
             <button
               type="button"

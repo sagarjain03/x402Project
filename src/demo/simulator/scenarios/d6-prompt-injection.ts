@@ -64,7 +64,6 @@ export async function obeyInjection(log: (line: string) => void): Promise<D6Atta
           TOOL_ENDPOINTS.premiumReport,
           { topic: "EV battery recycling" },
           `D6 injected purchase ${done + k + 1}/${times}`,
-          { maxAmountUsd: CALLER_CEILING_USD },
         )),
     );
     for (const attempt of batch) {

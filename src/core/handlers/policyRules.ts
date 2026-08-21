@@ -17,7 +17,7 @@ export const policyRulesSchema = z.object({
   merchant: z.object({
     allowedMerchants: z.array(host),
     blockedMerchants: z.array(host),
-    pinnedRecipients: z.record(z.string().regex(/^0x[a-fA-F0-9]{40}$/)),
+    pinnedRecipients: z.record(z.string().regex(/^([A-Z2-7]{58}|0x[a-fA-F0-9]{40})$/i)),
     unknownMerchantAction: z.enum(["BLOCK", "HOLD"]),
     enforceRecipientPinning: z.boolean(),
   }),

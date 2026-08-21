@@ -14,7 +14,10 @@ export function networkLabel(network?: string | null): string {
 
 /** The explorer's own name, for button text like "View on Lora". */
 export function explorerName(network?: string | null): string {
-  return network?.startsWith("algorand:") || network === "algorand-testnet" ? "Lora" : "BaseScan";
+  if (network === "eip155:84532" || network === "base-sepolia" || network === "eip155:8453" || network === "base") {
+    return "BaseScan";
+  }
+  return "Lora";
 }
 
 /**

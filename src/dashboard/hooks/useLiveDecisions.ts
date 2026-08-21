@@ -100,23 +100,26 @@ export function useLiveDecisions(agentId?: string) {
           if (isMounted) setIsConnected(true);
         };
 
-        es.onmessage = (event) => {
+        const handleEvent = (event: MessageEvent) => {
           try {
-            const data = JSON.parse(event.data);
-            if (data?.type === "DECISION" || data?.decision) {
+            const raw = JSON.parse(event.data);
+            const data = raw?.payload ? { ...raw.payload, agentId: raw.agentId, intentId: raw.intentId, eventType: raw.eventType } : raw;
+            if (data?.type === "DECISION" || data?.decision || raw?.eventType === "DECISION" || event.type === "decision") {
+              const amountUsd = data.amountUsd
+                || (data.amountMinor ? (Number(data.amountMinor) / 1_000_000).toFixed(2) : "0.00");
               const newDecision: LiveDecisionItem = {
-                id: data.id || `tx_${Date.now()}`,
-                intentId: data.intentId || `intent_${Date.now()}`,
-                agentId: data.agentId || "agent_researchbot",
-                agentName: data.agentName || "ResearchBot",
-                merchant: data.merchant || "localhost:3000",
-                amountUsd: data.amountUsd || "0.05",
-                decision: data.decision,
-                policyVersion: data.policyVersion || 3,
+                id: data.id || raw.intentId || `tx_${Date.now()}`,
+                intentId: data.intentId || raw.intentId || `intent_${Date.now()}`,
+                agentId: data.agentId || raw.agentId || "agent",
+                agentName: data.agentName || (data.agentId ? String(data.agentId).replace(/^agent_/, "") : "Agent"),
+                merchant: data.merchant || data.merchantDomain || "merchant",
+                amountUsd,
+                decision: data.decision || "BLOCK",
+                policyVersion: data.policyVersion || 1,
                 matchedRules: data.matchedRules || [],
-                riskScore: data.riskScore ?? 10,
-                latencyMs: data.latencyMs || 20,
-                reasons: data.reasons || [],
+                riskScore: data.riskScore ?? 0,
+                latencyMs: data.latencyMs || 0,
+                reasons: Array.isArray(data.reasons) ? data.reasons.map((r: any) => typeof r === "string" ? r : r.code || r.message || JSON.stringify(r)) : [],
                 txHash: data.txHash || null,
                 createdAt: data.createdAt || new Date().toISOString(),
               };
@@ -129,6 +132,10 @@ export function useLiveDecisions(agentId?: string) {
             console.error("[useLiveDecisions] Error parsing event:", e);
           }
         };
+
+        es.onmessage = handleEvent;
+        es.addEventListener("decision", handleEvent);
+        es.addEventListener("settlement", handleEvent);
 
         es.onerror = () => {
           if (isMounted) setIsConnected(false);

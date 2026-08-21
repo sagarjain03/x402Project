@@ -4,6 +4,9 @@ import { useState } from "react";
 import { apiPost, ApiClientError } from "@/dashboard/api-client/client";
 import { API } from "@/dashboard/api-client/endpoints";
 import { Bot, Check, Copy, KeyRound, Loader2, ShieldCheck, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 /**
  * OWNER: UI · Register a new agent.
@@ -66,14 +69,14 @@ export function CreateAgentModal({ onClose, onCreated }: { onClose: () => void; 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in" role="dialog" aria-modal="true">
+      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl animate-in zoom-in-95">
         <div className="flex items-center gap-2 border-b border-slate-200 px-5 py-4">
           <Bot className="h-5 w-5 text-blue-600" />
           <h2 className="text-base font-bold text-slate-900">
             {created ? "Agent registered" : "Register a new agent"}
           </h2>
-          <button onClick={onClose} className="ml-auto rounded-lg p-1 text-slate-400 hover:bg-slate-100" aria-label="Close">
+          <button onClick={onClose} className="ml-auto rounded-lg p-1 text-slate-400 hover:bg-slate-100 cursor-pointer" aria-label="Close">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -90,60 +93,59 @@ export function CreateAgentModal({ onClose, onCreated }: { onClose: () => void; 
                 <KeyRound className="h-4 w-4" /> Guard API key — shown once
               </h3>
               <div className="mt-2 flex items-center gap-2">
-                <code className="flex-1 break-all rounded-lg bg-white px-3 py-2 font-mono text-xs text-slate-800">
+                <code className="flex-1 break-all rounded-lg bg-white px-3 py-2 font-mono text-xs text-slate-800 border border-amber-200">
                   {created.apiKey}
                 </code>
-                <button
+                <Button
+                  size="sm"
                   onClick={copyKey}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-700"
+                  className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs gap-1.5"
                 >
                   {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                   {copied ? "Copied" : "Copy"}
-                </button>
+                </Button>
               </div>
               <p className="mt-2 text-xs text-amber-800">
                 Stored as a hash. It cannot be retrieved again — only rotated.
               </p>
             </div>
 
-            <button
+            <Button
               onClick={onClose}
-              className="w-full rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900"
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold"
             >
               Done
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="space-y-4 p-5">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Name</span>
-              <input
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Name</label>
+              <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="PricingBot"
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800"
               />
-            </label>
+            </div>
 
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Description</span>
-              <input
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Description</label>
+              <Input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Monitors competitor pricing APIs"
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800"
               />
-            </label>
+            </div>
 
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Wallet allowance cap (USD)</span>
-              <input
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Wallet allowance cap (USD)</label>
+              <Input
                 value={allowanceCapUsd}
                 onChange={(e) => setAllowanceCapUsd(e.target.value)}
                 inputMode="decimal"
-                className="rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm text-slate-800"
+                className="font-mono"
               />
-            </label>
+            </div>
 
             <div className="flex gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
               <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
@@ -155,21 +157,23 @@ export function CreateAgentModal({ onClose, onCreated }: { onClose: () => void; 
             </div>
 
             {error && (
-              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>
+              <Alert variant="destructive" className="p-3 text-xs">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
 
-            <div className="flex justify-end gap-2">
-              <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="ghost" onClick={onClose}>
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={submit}
                 disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
               >
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 Create agent
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -177,3 +181,4 @@ export function CreateAgentModal({ onClose, onCreated }: { onClose: () => void; 
     </div>
   );
 }
+

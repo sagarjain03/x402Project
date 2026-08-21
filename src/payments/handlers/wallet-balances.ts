@@ -5,7 +5,7 @@
 // Only addresses leave this file. The agent address is DERIVED from AVM_PRIVATE_KEY rather than
 // read from its own env var, so it can never drift from the key that signs: a balance panel
 // showing a wallet that is not the one paying would be worse than no panel at all.
-import algosdk from "algosdk";
+import crypto from "crypto";
 import { ALGORAND_TESTNET_NETWORK_ID, ALGORAND_TESTNET_USDC_ASA, env } from "@/shared/env";
 import { explorerAccountUrl } from "@/shared/explorer";
 import { ok } from "@/shared/http";
@@ -31,9 +31,31 @@ export interface WalletBalance {
   error?: string;
 }
 
-/** The 64-byte secret key is seed + public key; the address is base32 of the last 32 bytes. */
+/** The 64-byte secret key is seed + public key; the address is base32 of the last 32 bytes + sha512_256 checksum. */
+function encodeAlgorandAddress(publicKey: Uint8Array): string {
+  const hash = crypto.createHash("sha512-256").update(publicKey).digest();
+  const checksum = hash.subarray(28, 32);
+  const addrBytes = Buffer.concat([publicKey, checksum]);
+  const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = 0;
+  let value = 0;
+  let output = "";
+  for (let i = 0; i < addrBytes.length; i++) {
+    value = (value << 8) | addrBytes[i];
+    bits += 8;
+    while (bits >= 5) {
+      output += ALPHABET[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) {
+    output += ALPHABET[(value << (5 - bits)) & 31];
+  }
+  return output;
+}
+
 function agentAddress(): string {
-  return algosdk.encodeAddress(Buffer.from(env.AVM_PRIVATE_KEY, "base64").subarray(32));
+  return encodeAlgorandAddress(Buffer.from(env.AVM_PRIVATE_KEY, "base64").subarray(32));
 }
 
 /** algod hands back JSON numbers. Truncate to an integer before widening — never a float. */

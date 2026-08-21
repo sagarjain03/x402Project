@@ -3,37 +3,24 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { RotateCcw, Activity, CheckCircle2, Shield } from "lucide-react";
+import { Activity, Menu, Shield, X } from "lucide-react";
 import { ApprovalsBell } from "@/dashboard/components/approvals-bell";
+import { Badge } from "@/dashboard/components/ui/badge";
 
 export const TOP_NAV = [
   { href: "/overview", label: "Overview" },
-  { href: "/transactions", label: "Transactions" },
-  { href: "/agents", label: "Agents" },
-  { href: "/approvals", label: "Approvals" },
-  { href: "/merchants", label: "Merchants" },
-  { href: "/audit", label: "Audit Log" },
   { href: "/console", label: "Agent Console" },
-  { href: "/simulator", label: "Simulator" },
+  { href: "/transactions", label: "Transactions" },
+  { href: "/approvals", label: "Approvals" },
+  { href: "/agents", label: "Agents" },
+  { href: "/audit", label: "Audit Log" },
+  { href: "/simulator", label: "Attack Drills" },
 ];
 
-/** OWNER: UI · Global header with top navbar. */
+/** OWNER: UI · Global header with top navbar & mobile drawer. */
 export function Header() {
   const pathname = usePathname();
-  const [resetting, setResetting] = useState(false);
-  const [resetDone, setResetDone] = useState(false);
-
-  const handleReset = async () => {
-    setResetting(true);
-    setResetDone(false);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      setResetDone(true);
-      setTimeout(() => setResetDone(false), 2500);
-    } finally {
-      setResetting(false);
-    }
-  };
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <header className="h-16 border-b border-slate-200/80 bg-white/90 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -48,8 +35,8 @@ export function Header() {
           </span>
         </Link>
 
-        {/* Center: Top Navigation Links */}
-        <nav className="hidden md:flex items-center gap-1">
+        {/* Center: Desktop Navigation Links */}
+        <nav className="hidden lg:flex items-center gap-1">
           {TOP_NAV.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/overview" && pathname.startsWith(item.href));
             return (
@@ -69,31 +56,52 @@ export function Header() {
         </nav>
       </div>
 
-      {/* Right: Live Status & Reset */}
+      {/* Right: Live Status, Approvals & Mobile Hamburger */}
       <div className="flex items-center gap-3">
         <ApprovalsBell />
 
-        <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
-          <Activity className="h-3 w-3 text-emerald-600 animate-pulse" />
-          Gateway Live
-        </span>
-
-        {resetDone && (
-          <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium animate-in fade-in font-mono">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Reseeded
-          </span>
-        )}
-
-        <button
-          onClick={handleReset}
-          disabled={resetting}
-          className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl border border-slate-200 transition-colors disabled:opacity-60 cursor-pointer shadow-xs"
+        <Badge
+          variant="success"
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 font-mono text-[11px] font-semibold"
         >
-          <RotateCcw className={`h-3.5 w-3.5 text-slate-600 ${resetting ? "animate-spin" : ""}`} />
-          <span>{resetting ? "Resetting..." : "Reset Demo"}</span>
+          <Activity className="h-3 w-3 text-emerald-600 animate-pulse" />
+          Algorand TestNet
+        </Badge>
+
+        {/* Mobile Hamburger Button */}
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen((prev) => !prev)}
+          className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+          aria-label="Toggle navigation menu"
+        >
+          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
+
+      {/* Mobile Slide-down Drawer */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden absolute top-16 left-0 w-full bg-white border-b border-slate-200 shadow-xl py-4 px-6 z-40 space-y-1.5 animate-in slide-in-from-top-2 duration-150">
+          {TOP_NAV.map((item) => {
+            const isActive = pathname === item.href || (item.href !== "/overview" && pathname.startsWith(item.href));
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  isActive
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </header>
   );
 }
+

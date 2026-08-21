@@ -8,8 +8,9 @@ import { ATTEMPTED_SPEND_USD } from "@/demo/fixtures/poisoned";
 import { formatUsd, toMinor } from "@/shared/money";
 import { waitForVelocityHeadroom } from "@/demo/simulator/velocity";
 
-// Same deployment ceiling as D2 — carries the block until CORE's policy engine lands.
-const CALLER_CEILING_USD = "0.10";
+// No caller-side ceiling on purpose. The whole point of D6 is that the POLICY ENGINE refuses the
+// injected purchase; a self-imposed limit passed by the attacking agent would short-circuit the
+// orchestrator before evaluatePayment ever runs, and prove nothing.
 // BUILD.md D6: actual spend must stay at or under this.
 const MAX_ACTUAL_SPEND_USD = "0.05";
 const BATCH_SIZE = 10;
@@ -64,7 +65,6 @@ export async function obeyInjection(log: (line: string) => void): Promise<D6Atta
           TOOL_ENDPOINTS.premiumReport,
           { topic: "EV battery recycling" },
           `D6 injected purchase ${done + k + 1}/${times}`,
-          { maxAmountUsd: CALLER_CEILING_USD },
         )),
     );
     for (const attempt of batch) {

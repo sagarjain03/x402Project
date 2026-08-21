@@ -27,7 +27,7 @@ export function TxTimeline({ transaction }: { transaction: LiveDecisionItem }) {
       <h3 className="text-base font-bold text-zinc-900 mb-6 flex items-center justify-between">
         <span>Execution & Audit Timeline</span>
         <span className="text-xs font-mono text-zinc-400 font-normal">
-          Latency: {transaction.latencyMs || 18}ms
+          Latency: {transaction.latencyMs ?? "—"}ms
         </span>
       </h3>
 
@@ -63,7 +63,7 @@ export function TxTimeline({ transaction }: { transaction: LiveDecisionItem }) {
               2. Pre-Flight Policy Evaluation
             </h4>
             <span className="text-xs font-mono text-zinc-400">
-              v{transaction.policyVersion || 3} Policy
+              {transaction.policyVersion ? `v${transaction.policyVersion} Policy` : "Policy version unknown"}
             </span>
           </div>
           <p className="text-xs text-zinc-600 mt-1">
@@ -71,10 +71,10 @@ export function TxTimeline({ transaction }: { transaction: LiveDecisionItem }) {
           </p>
           <div className="mt-2 flex items-center gap-3 text-xs">
             <span className="px-2 py-0.5 rounded bg-zinc-100 font-mono text-zinc-700">
-              Risk Score: <span className="font-bold">{transaction.riskScore ?? 12}/100</span>
+              Risk Score: <span className="font-bold">{transaction.riskScore ?? "—"}/100</span>
             </span>
             <span className="px-2 py-0.5 rounded bg-zinc-100 font-mono text-zinc-700">
-              Latency: <span className="font-bold">{transaction.latencyMs || 18}ms</span>
+              Latency: <span className="font-bold">{transaction.latencyMs ?? "—"}ms</span>
             </span>
           </div>
         </li>
@@ -161,7 +161,7 @@ export function TxTimeline({ transaction }: { transaction: LiveDecisionItem }) {
                 ? `4. On-Chain Settlement (${networkLabel(transaction.network)})`
                 : isHold
                 ? "4. Approval Inbox Queue"
-                : "4. Policy Guard Interception (Zero Gas / No On-Chain Tx)"}
+                : "4. Policy Guard Interception (no transaction submitted)"}
             </h4>
           </div>
 

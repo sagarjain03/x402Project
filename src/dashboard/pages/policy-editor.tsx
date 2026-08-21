@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ErrorCard } from "@/dashboard/components/error-card";
 import { useParams } from "next/navigation";
 import { apiGet, apiPost } from "@/dashboard/api-client/client";
 import { API } from "@/dashboard/api-client/endpoints";
@@ -33,8 +34,11 @@ export function PolicyEditorPage() {
   const [activePolicy, setActivePolicy] = useState<Policy | null>(null);
   const [draftRules, setDraftRules] = useState<PolicyRules | null>(null);
   const [versions, setVersions] = useState<Policy[]>([]);
-  const [activeTab, setActiveTab] = useState<"form" | "json" | "history" | "simulate">("form");
+  const [activeTab, setActiveTab] = useState<"simulate" | "form" | "json" | "history">("simulate");
   const [loading, setLoading] = useState(true);
+  // A failed load used to be swallowed, leaving the form showing its hardcoded defaults as though
+  // they were this agent's live policy — which 'Create Immutable Version' would then write.
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<number>(3);
 
   // Simulation state
@@ -60,8 +64,9 @@ export function PolicyEditorPage() {
         setVersions(vers.versions);
         setSelectedVersion(current?.policy?.version ?? 1);
       }
+      setLoadError(null);
     } catch (err) {
-      console.error(err);
+      setLoadError(err instanceof Error ? err.message : "Could not load this agent's policy.");
     }
   };
 
@@ -97,6 +102,14 @@ export function PolicyEditorPage() {
 
   return (
     <div className="space-y-8">
+      {loadError && (
+        <ErrorCard
+          title="Could not load this agent's policy"
+          message={`${loadError} The rules below are defaults, not this agent's live policy — do not save them.`}
+          onRetry={() => void loadPolicy()}
+        />
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -112,6 +125,22 @@ export function PolicyEditorPage() {
 
         {/* View Switcher */}
         <div className="inline-flex rounded-lg border border-zinc-200 bg-white p-1 text-xs font-medium shadow-sm">
+          <button
+            onClick={() => {
+              setActiveTab("simulate");
+              if (!simulationData && !simulating) {
+                handleRunSimulation();
+              }
+            }}
+            className={`px-3.5 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
+              activeTab === "simulate"
+                ? "bg-blue-600 text-white font-semibold shadow-xs"
+                : "text-blue-700 hover:text-blue-900 bg-blue-50/60"
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Simulate Impact (What-If)</span>
+          </button>
           <button
             onClick={() => setActiveTab("form")}
             className={`px-3 py-1.5 rounded-md transition-colors ${
@@ -135,22 +164,6 @@ export function PolicyEditorPage() {
             }`}
           >
             Version Diff ({versions.length})
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("simulate");
-              if (!simulationData && !simulating) {
-                handleRunSimulation();
-              }
-            }}
-            className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
-              activeTab === "simulate"
-                ? "bg-blue-600 text-white font-semibold shadow-xs"
-                : "text-blue-700 hover:text-blue-900 bg-blue-50/60"
-            }`}
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            Simulate Impact (What-If)
           </button>
         </div>
       </div>
@@ -215,9 +228,10 @@ export function PolicyEditorPage() {
                   <h4 className="font-bold text-sm text-zinc-900 font-mono">
                     Version v{targetVersionPolicy?.version}
                   </h4>
-                  <span className="text-xs text-zinc-400 font-mono">
-                    Created: {targetVersionPolicy?.createdAt ? new Date(targetVersionPolicy.createdAt).toLocaleDateString() : "Historical"}
-                  </span>
+                  <div className="text-xs text-zinc-400 font-mono space-y-0.5 mt-0.5">
+                    <div>Created: {targetVersionPolicy?.createdAt ? new Date(targetVersionPolicy.createdAt).toLocaleDateString() : "Historical"}</div>
+                    {targetVersionPolicy?.createdByEmail && <div>Author: {targetVersionPolicy.createdByEmail}</div>}
+                  </div>
                 </div>
                 {targetVersionPolicy?.isActive && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">

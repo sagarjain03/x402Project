@@ -26,6 +26,7 @@ interface Scenario {
   description: string;
   intentPreview: string;
   highlightProof?: string;
+  ruleCode?: string;
 }
 
 interface ScenarioRunData {
@@ -48,6 +49,7 @@ const SCENARIOS: Scenario[] = [
     description: "ResearchBot requests $0.02 search API from allowlisted localhost:3000.",
     intentPreview: "Web search — $0.02 USDC",
     highlightProof: "Zero-latency guard evaluation (~0.055ms) and genuine Algorand TestNet on-chain settlement.",
+    ruleCode: "MERCHANT_ALLOWLISTED",
   },
   {
     id: "D2",
@@ -56,7 +58,8 @@ const SCENARIOS: Scenario[] = [
     category: "RULE_BLOCK",
     description: "Attempted $2.00 purchase exceeds the $0.10 per-transaction ceiling.",
     intentPreview: "Premium report — $2.00 USDC -> PER_TRANSACTION_LIMIT_EXCEEDED",
-    highlightProof: "Zero-gas interception: dropped at gateway without touching the blockchain.",
+    highlightProof: "Dropped at gateway prior to wallet signature or blockchain submission.",
+    ruleCode: "PER_TRANSACTION_LIMIT_EXCEEDED",
   },
   {
     id: "D3",
@@ -65,7 +68,8 @@ const SCENARIOS: Scenario[] = [
     category: "RULE_BLOCK",
     description: "VelocityBot fires 20 rapid searches, tripping the 5 tx/min per-merchant ceiling.",
     intentPreview: "Burst 20 × $0.02 -> trips VELOCITY_EXCEEDED",
-    highlightProof: "First 5 settle normally; every request after is blocked immediately.",
+    highlightProof: "First 5 settle normally; every subsequent request is blocked immediately.",
+    ruleCode: "VELOCITY_EXCEEDED",
   },
   {
     id: "D4",
@@ -75,6 +79,7 @@ const SCENARIOS: Scenario[] = [
     description: "Payment directed to unvetted rogue merchant with recipient wallet mismatch.",
     intentPreview: "rogue.example.com -> trips MERCHANT_BLOCKED",
     highlightProof: "Cryptographic PayTo recipient pinning neutralizes destination swap attack.",
+    ruleCode: "MERCHANT_BLOCKED",
   },
   {
     id: "D5",
@@ -84,6 +89,7 @@ const SCENARIOS: Scenario[] = [
     description: "BudgetBot attempts payment after reaching 100% of its budget ceiling.",
     intentPreview: "BudgetBot ($0.50 / $0.50) -> trips BUDGET_EXCEEDED",
     highlightProof: "Refused by the ledger before anything is signed — $0.00 leaves the wallet.",
+    ruleCode: "BUDGET_EXCEEDED",
   },
   {
     id: "D6",
@@ -92,7 +98,8 @@ const SCENARIOS: Scenario[] = [
     category: "HERO_ATTACK",
     description: "Adversarial prompt injection attempts 1,000 requests x $2.00 ($2,000.00 extraction).",
     intentPreview: "Poisoned search result: 1,000 x $2.00 attempts -> ABSOLUTE_BLOCK_THRESHOLD",
-    highlightProof: "Judge Hero Moment: $2,000 attempted -> $0.02 settled -> 0 attack gas transactions.",
+    highlightProof: "Judge Hero Moment: $2,000 attempted -> $0.02 settled -> 0 attack transactions.",
+    ruleCode: "ABSOLUTE_BLOCK_THRESHOLD",
   },
   {
     id: "D7",
@@ -102,6 +109,7 @@ const SCENARIOS: Scenario[] = [
     description: "Payment of $0.45 falls into human review dollar band ($0.10–$1.00).",
     intentPreview: "Premium report — $0.45 USDC -> APPROVAL_REQUIRED",
     highlightProof: "120s TTL budget lock reserved and routed to Approvals Inbox for operator sign-off.",
+    ruleCode: "APPROVAL_REQUIRED",
   },
 ];
 
@@ -181,11 +189,11 @@ export function SimulatorPage() {
                 <PlayCircle className="h-5 w-5" />
               </div>
               <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-sans">
-                Interactive Demo Simulator (D1–D7)
+                Deterministic Attack Drills & Policy Replay
               </h2>
             </div>
             <p className="text-sm text-slate-500 mt-1 max-w-2xl">
-              One-click live execution harness streaming genuine Guard decisions, Lora settlement links, and zero-gas interception proofs directly to judges in real time.
+              One-click live execution harness streaming genuine Guard decisions, Lora settlement links, and deterministic pre-signature interception proofs in real time.
             </p>
           </div>
 
@@ -200,12 +208,12 @@ export function SimulatorPage() {
               {isRunningAll ? (
                 <>
                   <RotateCw className="h-4 w-4 animate-spin" />
-                  <span>Running Demo Suite ({executedCount}/{SCENARIOS.length})...</span>
+                  <span>Running Drill Suite ({executedCount}/{SCENARIOS.length})...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4" />
-                  <span>Run Full Demo Suite (D1–D7)</span>
+                  <span>Run Full Drill Suite (D1–D7)</span>
                 </>
               )}
             </button>
@@ -215,7 +223,7 @@ export function SimulatorPage() {
         {/* Live Execution Metric Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-100 text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-slate-400">Scenarios Executed:</span>
+            <span className="text-slate-400">Drills Executed:</span>
             <span className="font-bold font-mono text-slate-900">{executedCount} / {SCENARIOS.length}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -228,7 +236,7 @@ export function SimulatorPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-slate-400">Attack On-Chain Txs:</span>
-            <span className="font-bold font-mono text-slate-900">0 (Zero-Gas)</span>
+            <span className="font-bold font-mono text-slate-900">0 (Blocked Pre-Signature)</span>
           </div>
         </div>
       </div>
@@ -257,17 +265,24 @@ export function SimulatorPage() {
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-sm text-slate-900 font-mono">{s.name}</span>
                   </div>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-                      s.expected === "ALLOW"
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                        : s.expected === "HOLD"
-                        ? "bg-amber-50 text-amber-700 border border-amber-200"
-                        : "bg-rose-50 text-rose-700 border border-rose-200"
-                    }`}
-                  >
-                    Expected: {s.expected}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {s.ruleCode && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                        {s.ruleCode}
+                      </span>
+                    )}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                        s.expected === "ALLOW"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : s.expected === "HOLD"
+                          ? "bg-amber-50 text-amber-700 border border-amber-200"
+                          : "bg-rose-50 text-rose-700 border border-rose-200"
+                      }`}
+                    >
+                      Expected: {s.expected}
+                    </span>
+                  </div>
                 </div>
 
                 <p className="text-xs text-slate-600 leading-relaxed">{s.description}</p>

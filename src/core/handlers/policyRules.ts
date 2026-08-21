@@ -2,6 +2,7 @@
 // Validation here is the boundary between "an operator typed something" and the money path.
 import { z } from "zod";
 import { canonicalJson } from "@/core/audit/chain";
+import { isAddress } from "@/shared/address";
 import type { PolicyRules } from "@/shared/types";
 
 const usd = z.string().regex(/^\d+(\.\d{1,6})?$/, "must be a decimal string like \"1.00\"");
@@ -17,7 +18,9 @@ export const policyRulesSchema = z.object({
   merchant: z.object({
     allowedMerchants: z.array(host),
     blockedMerchants: z.array(host),
-    pinnedRecipients: z.record(z.string().regex(/^0x[a-fA-F0-9]{40}$/)),
+    pinnedRecipients: z.record(
+      z.string().refine(isAddress, "must be an Algorand (58-char base32) or EVM (0x) address"),
+    ),
     unknownMerchantAction: z.enum(["BLOCK", "HOLD"]),
     enforceRecipientPinning: z.boolean(),
   }),

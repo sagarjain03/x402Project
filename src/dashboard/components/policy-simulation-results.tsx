@@ -14,7 +14,7 @@ export interface SimulationItem {
   was: "ALLOW" | "HOLD" | "BLOCK";
   wouldBe: "ALLOW" | "HOLD" | "BLOCK";
   changed: boolean;
-  reasons: string[];
+  reasons: (string | { code?: string; rule?: string; message?: string })[];
 }
 
 export interface PolicySimulationData {
@@ -45,8 +45,9 @@ export function PolicySimulationResults({ data }: PolicySimulationResultsProps) 
       return (
         item.intentId.toLowerCase().includes(q) ||
         item.merchant.toLowerCase().includes(q) ||
-        item.amountUsd.includes(q) ||
-        item.reasons.some((r) => r.toLowerCase().includes(q))
+        item.reasons.some((r) =>
+          (typeof r === "string" ? r : r.message || r.code || r.rule || "").toLowerCase().includes(q)
+        )
       );
     }
     return true;
@@ -302,14 +303,17 @@ export function PolicySimulationResults({ data }: PolicySimulationResultsProps) 
                     <td className="py-3 px-4">
                       {item.reasons && item.reasons.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
-                          {item.reasons.map((r, i) => (
-                            <span
-                              key={i}
-                              className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-zinc-100 text-zinc-800 border border-zinc-200"
-                            >
-                              {r}
-                            </span>
-                          ))}
+                          {item.reasons.map((r, i) => {
+                            const label = typeof r === "string" ? r : r.code || r.rule || r.message || JSON.stringify(r);
+                            return (
+                              <span
+                                key={i}
+                                className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-zinc-100 text-zinc-800 border border-zinc-200"
+                              >
+                                {label}
+                              </span>
+                            );
+                          })}
                         </div>
                       ) : (
                         <span className="text-[10px] text-zinc-400 font-sans">

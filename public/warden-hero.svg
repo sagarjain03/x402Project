@@ -1,0 +1,272 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" fill="none">
+  <!-- DEF: Gradients & Filters for crisp vector finish -->
+  <defs>
+    <!-- Shield Gradient -->
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#f8fafc" />
+      <stop offset="100%" stopColor="#e2e8f0" />
+    </linearGradient>
+    <!-- Shield Border Gradient -->
+    <linearGradient id="shieldBorder" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#94a3b8" />
+      <stop offset="100%" stopColor="#64748b" />
+    </linearGradient>
+    <!-- Robot Ear Blue Gradient -->
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#60a5fa" />
+      <stop offset="100%" stopColor="#2563eb" />
+    </linearGradient>
+    <!-- Card Highlight Gradient -->
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#ffffff" />
+      <stop offset="100%" stopColor="#f1f5f9" />
+    </linearGradient>
+  </defs>
+
+  <!-- 1. BASELINE GROUND (Crisp minimal segments) -->
+  <g stroke="#334155" stroke-width="5" stroke-linecap="round" opacity="0.8">
+    <line x1="70" y1="365" x2="95" y2="365" />
+    <line x1="115" y1="365" x2="860" y2="365" />
+    <line x1="880" y1="365" x2="905" y2="365" />
+  </g>
+
+  <!-- 2. TRANSACTION DATA STREAM (Behind characters / through shield) -->
+  <g>
+    <!-- Blue dotted stream from Card to Beacon -->
+    <line x1="390" y1="250" x2="455" y2="250" stroke="#3b82f6" stroke-width="6" stroke-linecap="round" stroke-dasharray="1 15" />
+    
+    <!-- Active Transaction Pulse Node -->
+    <circle cx="465" cy="250" r="10" fill="#ffffff" stroke="#3b82f6" stroke-width="5.5" />
+    
+    <!-- Blue dotted stream to Shield -->
+    <line x1="478" y1="250" x2="650" y2="250" stroke="#3b82f6" stroke-width="6" stroke-linecap="round" stroke-dasharray="1 15" />
+
+    <!-- Red dotted stream from Shield to Blocked Node -->
+    <line x1="755" y1="250" x2="815" y2="250" stroke="#ef4444" stroke-width="6" stroke-linecap="round" stroke-dasharray="1 15" />
+    
+    <!-- Blocked Endpoint Indicator -->
+    <circle cx="835" cy="250" r="14" fill="#ef4444" stroke="#1e293b" stroke-width="5" />
+  </g>
+
+  <!-- 3. LEFT CHARACTER: AUTONOMOUS AGENT ROBOT -->
+  <g id="robot-character">
+    <!-- Robot Left Arm (rested) -->
+    <path
+      d="M205 235 C185 240 160 280 150 315 C145 330 155 345 170 345 C185 345 195 330 205 305 L218 255"
+      fill="#fdfefe"
+      stroke="#1e293b"
+      stroke-width="5.5"
+      stroke-linejoin="round"
+    />
+
+    <!-- Robot Body / Torso -->
+    <path
+      d="M218 225 L210 330 C210 345 220 355 240 355 L265 355 C285 355 295 345 292 330 L288 225 Z"
+      fill="#fdfefe"
+      stroke="#1e293b"
+      stroke-width="5.5"
+      stroke-linejoin="round"
+    />
+    <!-- Torso inner contour line -->
+    <path d="M228 235 L242 350" stroke="#1e293b" stroke-width="4.5" stroke-linecap="round" />
+
+    <!-- Robot Ear (Left Side Antenna Piece) -->
+    <rect x="165" y="150" width="18" height="34" rx="8" fill="url(#blueGrad)" stroke="#1e293b" stroke-width="5" />
+    <path d="M183 158 L192 158" stroke="#1e293b" stroke-width="5" stroke-linecap="round" />
+    <path d="M183 176 L192 176" stroke="#1e293b" stroke-width="5" stroke-linecap="round" />
+
+    <!-- Robot Head (Smooth rounded box) -->
+    <rect
+      x="180"
+      y="110"
+      width="135"
+      height="105"
+      rx="32"
+      fill="#fdfefe"
+      stroke="#1e293b"
+      stroke-width="5.5"
+    />
+
+    <!-- Robot Eyes (Dark navy friendly pills) -->
+    <ellipse cx="245" cy="160" rx="5.5" ry="7" fill="#1e293b" />
+    <ellipse cx="295" cy="160" rx="5.5" ry="7" fill="#1e293b" />
+
+    <!-- Robot Smile -->
+    <path d="M260 176 Q270 186 280 176" stroke="#1e293b" stroke-width="4.5" stroke-linecap="round" fill="none" />
+
+    <!-- Robot Neck Joint -->
+    <rect x="238" y="215" width="28" height="10" rx="4" fill="#cbd5e1" stroke="#1e293b" stroke-width="4.5" />
+
+    <!-- Robot Right Arm (Presenting Card) -->
+    <path
+      d="M285 240 C310 245 330 260 360 270 C365 272 375 265 372 258 L355 242 C335 228 310 226 285 232"
+      fill="#fdfefe"
+      stroke="#1e293b"
+      stroke-width="5.5"
+      stroke-linejoin="round"
+    />
+
+    <!-- Hand holding card -->
+    <ellipse cx="366" cy="265" rx="8" ry="10" fill="#fdfefe" stroke="#1e293b" stroke-width="5" />
+
+    <!-- Payment Token / Card -->
+    <g transform="translate(362, 222)">
+      <!-- Radiating Sparks / Signal Rays -->
+      <line x1="-5" y1="-8" x2="-14" y2="-18" stroke="#3b82f6" stroke-width="4.5" stroke-linecap="round" />
+      <line x1="17" y1="-12" x2="17" y2="-25" stroke="#3b82f6" stroke-width="4.5" stroke-linecap="round" />
+      <line x1="39" y1="-8" x2="48" y2="-18" stroke="#3b82f6" stroke-width="4.5" stroke-linecap="round" />
+
+      <!-- Card Base -->
+      <rect
+        x="0"
+        y="0"
+        width="34"
+        height="50"
+        rx="7"
+        fill="url(#cardGrad)"
+        stroke="#1e293b"
+        stroke-width="5"
+      />
+
+      <!-- Crypto / Payment Diamond Icon -->
+      <path d="M17 14 L26 25 L17 31 L8 25 Z" fill="#94a3b8" opacity="0.6" />
+      <path d="M17 14 L26 25 L17 21 Z" fill="#64748b" />
+      <path d="M17 14 L8 25 L17 21 Z" fill="#cbd5e1" />
+      <path d="M17 23 L26 25 L17 36 L8 25 Z" fill="#94a3b8" opacity="0.8" />
+      <path d="M17 23 L26 25 L17 36 Z" fill="#475569" />
+      <path d="M17 23 L8 25 L17 36 Z" fill="#94a3b8" />
+    </g>
+  </g>
+
+  <!-- 4. RIGHT CHARACTER: WARDEN SECURITY GUARD -->
+  <g id="warden-guard">
+    <!-- Guard Left Arm (Rested on Hip) -->
+    <path
+      d="M592 205 C570 230 550 255 570 290 C578 302 592 290 598 280 L610 235"
+      fill="#e2e8f0"
+      stroke="#1e293b"
+      stroke-width="5.5"
+      stroke-linejoin="round"
+    />
+
+    <!-- Guard Legs & Trousers -->
+    <path d="M608 300 L600 365 L636 365 L644 300 Z" fill="#e2e8f0" stroke="#1e293b" stroke-width="5" stroke-linejoin="round" />
+    <path d="M650 300 L658 365 L694 365 L686 300 Z" fill="#e2e8f0" stroke="#1e293b" stroke-width="5" stroke-linejoin="round" />
+    <!-- Shoes / Boots -->
+    <path d="M588 365 C588 355 600 348 618 348 L640 348 C645 348 645 365 645 365 Z" fill="#1e293b" stroke="#1e293b" stroke-width="3" />
+    <path d="M655 365 C655 348 655 348 660 348 L682 348 C700 348 712 355 712 365 Z" fill="#1e293b" stroke="#1e293b" stroke-width="3" />
+
+    <!-- Guard Uniform Body / Torso -->
+    <path
+      d="M600 200 L592 300 L702 300 L694 200 Z"
+      fill="#e2e8f0"
+      stroke="#1e293b"
+      stroke-width="5.5"
+      stroke-linejoin="round"
+    />
+
+    <!-- Collar & Placket -->
+    <path d="M625 195 L647 225 L669 195" fill="#cbd5e1" stroke="#1e293b" stroke-width="4.5" stroke-linejoin="round" />
+    <line x1="647" y1="225" x2="647" y2="300" stroke="#1e293b" stroke-width="4" stroke-linecap="round" />
+    <!-- Shirt Pocket Line -->
+    <path d="M612 235 L628 235" stroke="#1e293b" stroke-width="4" stroke-linecap="round" />
+
+    <!-- Epaulets (Shoulder Straps in Blue) -->
+    <path d="M590 205 L615 195 L618 205 L594 216 Z" fill="#2563eb" stroke="#1e293b" stroke-width="4.5" stroke-linejoin="round" />
+    <path d="M704 205 L679 195 L676 205 L700 216 Z" fill="#2563eb" stroke="#1e293b" stroke-width="4.5" stroke-linejoin="round" />
+
+    <!-- Belt (Dark Navy with Blue Buckle) -->
+    <rect x="590" y="285" width="114" height="18" fill="#1e293b" />
+    <rect x="635" y="282" width="24" height="24" rx="4" fill="#2563eb" stroke="#1e293b" stroke-width="4" />
+
+    <!-- Guard Head & Face -->
+    <path
+      d="M608 140 C608 110 630 85 660 85 C690 85 712 110 712 140 C712 175 685 195 660 195 C635 195 608 175 608 140 Z"
+      fill="#fdfefe"
+      stroke="#1e293b"
+      stroke-width="5.5"
+    />
+
+    <!-- Guard Eyes -->
+    <ellipse cx="638" cy="150" rx="5" ry="6.5" fill="#1e293b" />
+    <ellipse cx="678" cy="150" rx="5" ry="6.5" fill="#1e293b" />
+
+    <!-- Guard Smile -->
+    <path d="M650 166 Q658 174 666 166" stroke="#1e293b" stroke-width="4" stroke-linecap="round" fill="none" />
+
+    <!-- Guard Ear (Right Side) -->
+    <rect x="708" y="138" width="14" height="26" rx="6" fill="#fdfefe" stroke="#1e293b" stroke-width="4.5" />
+
+    <!-- Guard Cap (Peaked Officer Hat) -->
+    <!-- Cap Dome -->
+    <path
+      d="M608 128 C606 72 714 72 712 128 Z"
+      fill="#cbd5e1"
+      stroke="#1e293b"
+      stroke-width="5"
+      stroke-linejoin="round"
+    />
+    <!-- Cap Visor / Peak -->
+    <path
+      d="M594 135 C615 118 705 118 726 135 C715 142 605 142 594 135 Z"
+      fill="#1e293b"
+      stroke="#1e293b"
+      stroke-width="3"
+    />
+    <!-- Cap Shield Badge -->
+    <path
+      d="M652 98 L668 98 L668 110 C668 118 660 123 660 123 C660 123 652 118 652 110 Z"
+      fill="#2563eb"
+      stroke="#1e293b"
+      stroke-width="3.5"
+      stroke-linejoin="round"
+    />
+
+    <!-- Guard Right Arm (Holding Shield) -->
+    <path
+      d="M685 205 C705 215 725 240 710 270"
+      stroke="#1e293b"
+      stroke-width="5.5"
+      fill="none"
+      stroke-linecap="round"
+    />
+
+    <!-- 5. WARDEN POLICY SHIELD (Hero Focus Point) -->
+    <g id="warden-shield" transform="translate(660, 180)">
+      <!-- Outer Shield Outline & Shading -->
+      <path
+        d="M0 25 C30 10 95 10 125 25 C128 75 125 140 62 175 C0 140 -3 75 0 25 Z"
+        fill="url(#shieldBorder)"
+        stroke="#1e293b"
+        stroke-width="5.5"
+        stroke-linejoin="round"
+      />
+
+      <!-- Inner Shield Plate -->
+      <path
+        d="M10 32 C35 20 90 20 115 32 C118 75 115 130 62 162 C10 130 7 75 10 32 Z"
+        fill="url(#shieldGrad)"
+        stroke="#1e293b"
+        stroke-width="4.5"
+        stroke-linejoin="round"
+      />
+
+      <!-- Shield Highlight Sheen -->
+      <path
+        d="M18 38 C38 28 62 28 62 28 L62 152 C22 124 16 78 18 38 Z"
+        fill="#ffffff"
+        opacity="0.6"
+      />
+
+      <!-- Green Verified Checkmark -->
+      <path
+        d="M38 88 L54 105 L88 64"
+        stroke="#10b981"
+        stroke-width="12"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"
+      />
+    </g>
+  </g>
+</svg>

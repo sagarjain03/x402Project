@@ -61,6 +61,18 @@ export function toFeedItem(row: TransactionRow): LiveDecisionItem {
   };
 }
 
+/** The stream may carry a reason as a bare code or as the full object. Normalise to the object. */
+function toReason(value: unknown): { code: string; rule?: string; message: string } {
+  if (typeof value === "string") return { code: value, message: value };
+  const r = value as { code?: unknown; rule?: unknown; message?: unknown };
+  const code = typeof r?.code === "string" ? r.code : "UNKNOWN";
+  return {
+    code,
+    rule: typeof r?.rule === "string" ? r.rule : undefined,
+    message: typeof r?.message === "string" ? r.message : code,
+  };
+}
+
 export function useLiveDecisions(agentId?: string) {
   const [decisions, setDecisions] = useState<LiveDecisionItem[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -100,23 +112,37 @@ export function useLiveDecisions(agentId?: string) {
           if (isMounted) setIsConnected(true);
         };
 
-        es.onmessage = (event) => {
+        const handleEvent = (event: MessageEvent) => {
           try {
-            const data = JSON.parse(event.data);
-            if (data?.type === "DECISION" || data?.decision) {
+            const raw = JSON.parse(event.data);
+            const data = raw?.payload ? { ...raw.payload, agentId: raw.agentId, intentId: raw.intentId, eventType: raw.eventType } : raw;
+            if (data?.type === "DECISION" || data?.decision || raw?.eventType === "DECISION" || event.type === "decision") {
+              const intentId = data.intentId || raw.intentId;
+              const decision = data.decision;
+              const amountUsd = data.amountUsd
+                || (data.amountMinor ? (Number(data.amountMinor) / 1_000_000).toFixed(2) : undefined);
+              const merchant = data.merchant || data.merchantDomain;
+
+              // An event missing any of these is dropped rather than completed with invented
+              // values. A row that names an agent, a merchant or a decision the server never sent
+              // is worse than a row that never appears.
+              if (!intentId || !decision || !amountUsd || !merchant) return;
+
               const newDecision: LiveDecisionItem = {
-                id: data.id || `tx_${Date.now()}`,
-                intentId: data.intentId || `intent_${Date.now()}`,
-                agentId: data.agentId || "agent_researchbot",
-                agentName: data.agentName || "ResearchBot",
-                merchant: data.merchant || "localhost:3000",
-                amountUsd: data.amountUsd || "0.05",
-                decision: data.decision,
-                policyVersion: data.policyVersion || 3,
+                id: data.id || intentId,
+                intentId,
+                agentId: data.agentId || raw.agentId,
+                agentName: data.agentName,
+                merchant,
+                amountUsd,
+                decision,
+                policyVersion: data.policyVersion,
                 matchedRules: data.matchedRules || [],
-                riskScore: data.riskScore ?? 10,
-                latencyMs: data.latencyMs || 20,
-                reasons: data.reasons || [],
+                riskScore: data.riskScore,
+                latencyMs: data.latencyMs,
+                // Kept as objects. Flattening them to strings here is what made reason.message
+                // undefined for every consumer downstream.
+                reasons: Array.isArray(data.reasons) ? data.reasons.map(toReason) : [],
                 txHash: data.txHash || null,
                 createdAt: data.createdAt || new Date().toISOString(),
               };
@@ -129,6 +155,10 @@ export function useLiveDecisions(agentId?: string) {
             console.error("[useLiveDecisions] Error parsing event:", e);
           }
         };
+
+        es.onmessage = handleEvent;
+        es.addEventListener("decision", handleEvent);
+        es.addEventListener("settlement", handleEvent);
 
         es.onerror = () => {
           if (isMounted) setIsConnected(false);

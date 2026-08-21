@@ -1,12 +1,13 @@
 "use client";
 
 import { ApprovalCard } from "@/dashboard/components/approval-card";
+import { ErrorCard } from "@/dashboard/components/error-card";
 import {
   formatCountdown,
   secondsLeft,
   usePendingApprovals,
 } from "@/dashboard/hooks/usePendingApprovals";
-import { CheckCircle2, Clock, Hourglass, RefreshCw, ShieldAlert, Timer } from "lucide-react";
+import { CheckCircle2, Clock, Hourglass, RefreshCw, ShieldAlert, Timer, Trash2 } from "lucide-react";
 
 /**
  * OWNER: UI · The HOLD queue.
@@ -82,6 +83,18 @@ export function ApprovalsPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Sweep Expired Holds Trigger */}
+          {expired > 0 && (
+            <button
+              type="button"
+              onClick={refresh}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 shadow-2xs hover:bg-rose-100 cursor-pointer"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Sweep {expired} Expired
+            </button>
+          )}
+
           {/* The number the operator is actually working against */}
           {soonestSeconds !== null && (
             <span
@@ -98,7 +111,7 @@ export function ApprovalsPage() {
           <button
             type="button"
             onClick={refresh}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 cursor-pointer"
           >
             <RefreshCw className="h-3.5 w-3.5 text-slate-500" />
             Refresh
@@ -135,11 +148,7 @@ export function ApprovalsPage() {
         />
       </div>
 
-      {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-          {error}
-        </div>
-      )}
+      {error && <ErrorCard title="Approvals Queue Error" message={error} onRetry={refresh} />}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {loading ? (

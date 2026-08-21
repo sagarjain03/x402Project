@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { formatCountdown, usePendingApprovals } from "@/dashboard/hooks/usePendingApprovals";
 import { Hourglass, Timer } from "lucide-react";
 
@@ -12,9 +13,12 @@ import { Hourglass, Timer } from "lucide-react";
  * a permanently-lit badge teaches people to stop reading it.
  */
 export function ApprovalsBell() {
-  const { live, expired, soonestSeconds } = usePendingApprovals();
+  // The approvals page mounts this same hook. Polling here as well doubled every request on the
+  // one page where the badge shows nothing the list underneath it does not already show.
+  const onApprovalsPage = usePathname() === "/approvals";
+  const { live, expired, soonestSeconds } = usePendingApprovals({ enabled: !onApprovalsPage });
 
-  if (live.length === 0 && expired === 0) return null;
+  if (onApprovalsPage || (live.length === 0 && expired === 0)) return null;
 
   const urgent = soonestSeconds !== null && soonestSeconds < 60;
 

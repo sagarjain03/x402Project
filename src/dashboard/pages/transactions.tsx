@@ -5,6 +5,7 @@ import { apiGet } from "@/dashboard/api-client/client";
 import { API } from "@/dashboard/api-client/endpoints";
 import { TxTable } from "@/dashboard/components/tx-table";
 import { FundFlow } from "@/dashboard/components/fund-flow";
+import { ErrorCard } from "@/dashboard/components/error-card";
 import { toFeedItem, type LiveDecisionItem, type TransactionRow } from "@/dashboard/hooks/useLiveDecisions";
 import {
   ArrowLeftRight,
@@ -12,13 +13,9 @@ import {
   ShieldBan,
   Shield,
   FileText,
-  Calendar,
 } from "lucide-react";
-
-interface MetricsSummary {
-  windowHours: number;
-  blockedUsd: string;
-}
+import { Card } from "@/dashboard/components/ui/card";
+import { Progress } from "@/dashboard/components/ui/progress";
 
 interface TransactionsApiResponse {
   transactions: TransactionRow[];
@@ -31,20 +28,17 @@ interface AgentsApiResponse {
 
 export function TransactionsPage() {
   const [transactions, setTransactions] = useState<LiveDecisionItem[]>([]);
-  const [metrics, setMetrics] = useState<MetricsSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadTransactions = useCallback(async () => {
       try {
         setLoading(true);
-        // Money protected is measured over the guard's window by CORE, so it comes from the
-        // metrics endpoint rather than being derived from whichever page of rows loaded here.
         // The transactions endpoint returns agentId, not the name, so the roster is fetched once
         // and joined here. A failure leaves agentName undefined and the table falls back to the id,
         // which is the point: a row must never display an agent it cannot actually identify.
-        const [data, summary, roster] = await Promise.all([
+        const [data, roster] = await Promise.all([
           apiGet<TransactionsApiResponse>(`${API.transactions}?limit=200`),
-          apiGet<MetricsSummary>(API.metrics).catch(() => null),
           apiGet<AgentsApiResponse>(API.agents).catch(() => null),
         ]);
         const names = new Map((roster?.agents ?? []).map((agent) => [agent.agentId, agent.name]));
@@ -52,9 +46,9 @@ export function TransactionsPage() {
           ...toFeedItem(row),
           agentName: names.get(row.agentId),
         })));
-        setMetrics(summary);
+        setError(null);
       } catch (err) {
-        console.error("[transactions] load failed:", err);
+        setError(err instanceof Error ? err.message : "Could not load transactions.");
       } finally {
         setLoading(false);
       }
@@ -77,8 +71,14 @@ export function TransactionsPage() {
   const blockPct = total > 0 ? Math.round((blockCount / total) * 100) : 0;
   const holdPct = total > 0 ? Math.round((holdCount / total) * 100) : 0;
 
-  const blockedUsd = metrics?.blockedUsd ?? "0.00";
-  const windowHours = metrics?.windowHours ?? 24;
+  // Cents as integers, from the rows the table is showing. The metrics endpoint measures a
+  // 24-hour window while this table has none, so reading blockedUsd from it put "$0.00" directly
+  // above ten visible BLOCKED rows.
+  const blockedUsd = (
+    transactions
+      .filter((t) => t.decision === "BLOCK")
+      .reduce((acc, t) => acc + Math.round(Number(t.amountUsd) * 100), 0) / 100
+  ).toFixed(2);
 
   return (
     <div className="space-y-8 font-sans">
@@ -95,21 +95,12 @@ export function TransactionsPage() {
             Every payment intent evaluated, enforced, and recorded by WARDEN.
           </p>
         </div>
-
-        {/* Right Header Control: Window */}
-        <div className="flex items-center gap-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 shadow-2xs">
-            <Calendar className="h-3.5 w-3.5 text-slate-500" />
-            <span>Window: last 24 hours</span>
-            <span className="text-slate-400">∨</span>
-          </div>
-        </div>
       </div>
 
       {/* 4 Redesigned Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* 1. Total Intents */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
+  <Card className="rounded-2xl p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
           <div className="space-y-3">
             {/* Icon + Eyebrow */}
             <div className="flex items-center gap-2.5">
@@ -127,38 +118,14 @@ export function TransactionsPage() {
                 {total}
               </div>
               <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                <span>Last {windowHours}h</span>
+                <span>All recorded</span>
               </p>
             </div>
           </div>
-
-          {/* Blue Wave Sparkline */}
-          <div className="mt-4 -mx-5 -mb-5 h-11 w-[calc(100%+40px)] overflow-hidden pointer-events-none opacity-85">
-            <svg viewBox="0 0 300 60" className="w-full h-full" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="tx-blue-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 0,45 C 50,55 90,30 140,40 C 190,50 240,15 300,20 L 300,60 L 0,60 Z"
-                fill="url(#tx-blue-grad)"
-              />
-              <path
-                d="M 0,45 C 50,55 90,30 140,40 C 190,50 240,15 300,20"
-                fill="none"
-                stroke="#3b82f6"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-              <circle cx="300" cy="20" r="3.5" fill="#3b82f6" />
-            </svg>
-          </div>
-        </div>
+        </Card>
 
         {/* 2. Money Protected (Strongest Card) */}
-        <div className="bg-white rounded-2xl border border-emerald-200/80 p-5 shadow-sm hover:shadow transition-all flex flex-col justify-between relative overflow-hidden group bg-gradient-to-br from-white via-emerald-50/20 to-emerald-50/40">
+  <Card className="rounded-2xl border-emerald-200/80 p-5 shadow-sm hover:shadow transition-all flex flex-col justify-between relative overflow-hidden group bg-gradient-to-br from-white via-emerald-50/20 to-emerald-50/40">
           <div className="space-y-3">
             {/* Icon + Eyebrow */}
             <div className="flex items-center gap-2.5">
@@ -180,34 +147,10 @@ export function TransactionsPage() {
               </p>
             </div>
           </div>
-
-          {/* Emerald Wave Sparkline */}
-          <div className="mt-4 -mx-5 -mb-5 h-11 w-[calc(100%+40px)] overflow-hidden pointer-events-none">
-            <svg viewBox="0 0 300 60" className="w-full h-full" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="tx-emerald-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 0,55 C 50,52 90,40 140,45 C 190,50 240,20 300,25 L 300,60 L 0,60 Z"
-                fill="url(#tx-emerald-grad)"
-              />
-              <path
-                d="M 0,55 C 50,52 90,40 140,45 C 190,50 240,20 300,25"
-                fill="none"
-                stroke="#10b981"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-              <circle cx="300" cy="25" r="3.5" fill="#10b981" />
-            </svg>
-          </div>
-        </div>
+        </Card>
 
         {/* 3. Allowed */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
+  <Card className="rounded-2xl p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
           <div className="space-y-3">
             {/* Icon + Eyebrow */}
             <div className="flex items-center gap-2.5">
@@ -231,16 +174,13 @@ export function TransactionsPage() {
           </div>
 
           {/* Green Progress Bar */}
-          <div className="mt-4 w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-            <div
-              className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${allowPct}%` }}
-            />
+          <div className="mt-4">
+            <Progress value={allowPct} indicatorClassName="bg-emerald-500" />
           </div>
-        </div>
+        </Card>
 
         {/* 4. Blocked / Held */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
+  <Card className="rounded-2xl p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
           <div className="space-y-3">
             {/* Icon + Eyebrow */}
             <div className="flex items-center gap-2.5">
@@ -265,21 +205,23 @@ export function TransactionsPage() {
 
           {/* Red & Amber Split Progress Bars */}
           <div className="mt-4 flex gap-1.5 w-full">
-            <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
-              <div
-                className="bg-rose-500 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, blockPct * 2)}%` }}
-              />
+            <div className="flex-1">
+              <Progress value={blockPct} indicatorClassName="bg-rose-500" />
             </div>
-            <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
-              <div
-                className="bg-amber-500 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, holdPct * 4)}%` }}
-              />
+            <div className="flex-1">
+              <Progress value={holdPct} indicatorClassName="bg-amber-500" />
             </div>
           </div>
-        </div>
+        </Card>
       </div>
+
+      {error && (
+        <ErrorCard
+          title="Could not load transactions"
+          message={error}
+          onRetry={() => void loadTransactions()}
+        />
+      )}
 
       {/* Sender -> merchant balances and the settled transfers between them */}
       <FundFlow transactions={transactions} loading={loading} onRefresh={loadTransactions} />

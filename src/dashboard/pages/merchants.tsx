@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiGet } from "@/dashboard/api-client/client";
 import { API } from "@/dashboard/api-client/endpoints";
-import { Store, ShieldCheck, ShieldBan, ExternalLink, Globe } from "lucide-react";
+import { Store, CheckCircle2, Ban, ExternalLink, Globe } from "lucide-react";
 
 interface MerchantItem {
   domain: string;
@@ -144,13 +144,12 @@ export function MerchantsPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold font-mono ${
-                        isAllowed
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold font-mono ${isAllowed
                           ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                           : "bg-rose-50 text-rose-700 border border-rose-200"
-                      }`}
+                        }`}
                     >
-                      {isAllowed ? <ShieldCheck className="h-3.5 w-3.5" /> : <ShieldBan className="h-3.5 w-3.5" />}
+                      {isAllowed ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
                       {m.status}
                     </span>
                     <span className="text-xs font-mono text-slate-400">

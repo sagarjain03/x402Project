@@ -5,9 +5,8 @@ import Link from "next/link";
 import type { LiveDecisionItem } from "@/dashboard/hooks/useLiveDecisions";
 import {
   X,
-  ShieldAlert,
-  ShieldCheck,
-  ShieldBan,
+  AlertOctagon,
+  CheckCircle2,
   Clock,
   ExternalLink,
   Bot,
@@ -15,8 +14,6 @@ import {
   Wallet,
   Zap,
   Sliders,
-  CheckCircle2,
-  AlertOctagon,
   FileCode,
   ArrowRight,
 } from "lucide-react";
@@ -67,28 +64,21 @@ export function TxDetailDrawer({ tx, isOpen, onClose }: TxDetailDrawerProps) {
         <div>
           <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-20">
             <div className="flex items-center gap-3">
-              <div
-                className={`h-9 w-9 rounded-xl flex items-center justify-center ${
-                  isAllow
-                    ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-                    : isBlock
-                    ? "bg-rose-50 text-rose-600 border border-rose-200"
-                    : "bg-amber-50 text-amber-600 border border-amber-200"
-                }`}
-              >
-                {isAllow ? (
-                  <ShieldCheck className="h-5 w-5" />
-                ) : isBlock ? (
-                  <ShieldBan className="h-5 w-5" />
-                ) : (
-                  <Clock className="h-5 w-5" />
-                )}
-              </div>
+              {/* Plain icon — no coloured container */}
+              {isAllow ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              ) : isBlock ? (
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" className="h-5 w-5 text-red-500">
+                  <line x1="3" y1="3" x2="13" y2="13" /><line x1="13" y1="3" x2="3" y2="13" />
+                </svg>
+              ) : (
+                <Clock className="h-5 w-5 text-amber-400" />
+              )}
               <div>
                 <h3 className="font-bold text-lg text-slate-900">
                   Transaction Detail
                 </h3>
-                <p className="text-xs font-mono text-slate-400">
+                <p className="text-xs font-mono text-gray-400">
                   {targetId}
                 </p>
               </div>
@@ -119,51 +109,43 @@ export function TxDetailDrawer({ tx, isOpen, onClose }: TxDetailDrawerProps) {
                 </div>
               </div>
 
-              {/* Status Pill */}
-              <span
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold font-mono uppercase tracking-wide ${
-                  isAllow
-                    ? "bg-emerald-100/80 text-emerald-800 border border-emerald-300"
-                    : isBlock
-                    ? "bg-rose-100/80 text-rose-800 border border-rose-300"
-                    : "bg-amber-100/80 text-amber-800 border border-amber-300"
-                }`}
-              >
-                {isAllow ? "✓ ALLOWED" : isBlock ? "⊘ BLOCKED" : "◷ HELD"}
+              {/* Rule 2: Minimal status indicator — dot + neutral text, no coloured pill */}
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold font-mono text-gray-700">
+                <span
+                  className={`h-2 w-2 rounded-full shrink-0 ${
+                    isAllow ? "bg-emerald-500" : isBlock ? "bg-red-500" : "bg-amber-400"
+                  }`}
+                />
+                {isAllow ? "ALLOWED" : isBlock ? "BLOCKED" : "HELD"}
               </span>
             </div>
 
-            {/* Interception Proof (For Blocked) */}
+            {/* BLOCKED: bare text, border-l-2 on container — no coloured box */}
             {isBlock && (
-              <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-200/80 text-xs space-y-2">
-                <div className="flex items-center gap-2 text-rose-900 font-bold">
-                  <AlertOctagon className="h-4 w-4 text-rose-600" />
-                  <span>BLOCKED BEFORE SIGNING</span>
-                </div>
-                <p className="text-rose-700/90 leading-relaxed text-[12px]">
-                  This intent was intercepted by the deterministic policy engine before any cryptographic signature or blockchain submission. No transaction was submitted, and no funds left the agent wallet.
+              <div className="border-l-2 border-l-red-500 pl-3 space-y-0.5">
+                <p className="text-xs font-bold text-red-600 tracking-widest uppercase">Blocked Before Signing</p>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Intercepted before any signature or submission. No funds moved.
                 </p>
               </div>
             )}
 
-            {/* If Allowed: On-Chain Settlement Info */}
+            {/* SETTLED: bare text, border-l-2 — no coloured box; hash as raw gray-400 mono */}
             {isAllow && tx.txHash && (
-              <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-xs space-y-2">
-                <div className="flex items-center gap-2 text-emerald-900 font-bold">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <span>SETTLED ON-CHAIN ({networkLabel(tx.network)})</span>
-                </div>
-                <p className="text-emerald-800/90 font-mono text-[11px] truncate">
-                  Tx: {tx.txHash}
+              <div className="border-l-2 border-l-emerald-400 pl-3 space-y-1">
+                <p className="text-xs font-bold text-gray-600 tracking-widest uppercase">Settled On-Chain ({networkLabel(tx.network)})</p>
+                {/* Raw monospace hash — text-gray-400, no background */}
+                <p className="font-mono text-xs text-gray-400 truncate" title={tx.txHash}>
+                  {tx.txHash}
                 </p>
                 <a
                   href={explorerTxUrl(tx.network, tx.txHash) ?? "#"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline pt-1"
+                  className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors"
                 >
-                  <span>View on {explorerName(tx.network)} Explorer</span>
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>View on {explorerName(tx.network)}</span>
+                  <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
             )}

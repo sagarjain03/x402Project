@@ -7,8 +7,8 @@ import {
   Bot,
   Gauge,
   Lock,
-  ShieldAlert,
-  ShieldCheck,
+  AlertOctagon,
+  CheckCircle2,
   Wallet,
 } from "lucide-react";
 import { Card, CardContent } from "@/dashboard/components/ui/card";
@@ -145,12 +145,12 @@ export function AgentCard({ agent, onStatusChange }: { agent: AgentItem; onStatu
           >
             {isFrozen ? (
               <>
-                <ShieldAlert className="h-3.5 w-3.5" />
+                <AlertOctagon className="h-3.5 w-3.5" />
                 FROZEN
               </>
             ) : (
               <>
-                <ShieldCheck className="h-3.5 w-3.5" />
+                <CheckCircle2 className="h-3.5 w-3.5" />
                 ACTIVE
               </>
             )}
@@ -160,8 +160,11 @@ export function AgentCard({ agent, onStatusChange }: { agent: AgentItem; onStatu
         <p className="line-clamp-2 text-xs text-zinc-600">{agent.description}</p>
 
         {isFrozen && agent.frozenReason && (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
-            <span className="font-semibold">Frozen reason:</span> {agent.frozenReason}
+          <div className="flex items-start gap-2.5 p-4 rounded-lg border border-gray-100 bg-white border-l-4 border-l-red-500">
+            <AlertOctagon className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-gray-700 leading-relaxed">
+              <span className="font-semibold">Frozen reason:</span> {agent.frozenReason}
+            </p>
           </div>
         )}
 
@@ -222,8 +225,8 @@ export function AgentCard({ agent, onStatusChange }: { agent: AgentItem; onStatu
                 isFrozen || percent >= 100
                   ? "bg-rose-500"
                   : percent >= 75
-                  ? "bg-amber-500"
-                  : "bg-emerald-500"
+                    ? "bg-amber-500"
+                    : "bg-emerald-500"
               }
             />
           ) : (
@@ -238,7 +241,7 @@ export function AgentCard({ agent, onStatusChange }: { agent: AgentItem; onStatu
       </div>
 
       <div className="flex items-center justify-between border-t border-zinc-100 bg-zinc-50/50 px-6 py-3 text-xs">
-        <span className="font-mono text-zinc-400">Funded: ${agent.walletFundedUsd} USDC</span>
+        <span className="font-mono text-sm font-semibold text-slate-700">Funded: ${agent.walletFundedUsd} USDC</span>
         <div className="flex items-center gap-3">
           <button
             type="button"

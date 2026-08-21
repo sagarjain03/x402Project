@@ -15,8 +15,8 @@ import { toAgentItem, type AgentItem, type AgentRow } from "@/dashboard/componen
 import {
   ArrowLeft,
   Bot,
-  ShieldCheck,
-  ShieldAlert,
+  CheckCircle2,
+  AlertOctagon,
   Wallet,
   Coins,
   Copy,
@@ -231,12 +231,12 @@ export function AgentDetailPage() {
             >
               {isFrozen ? (
                 <>
-                  <ShieldAlert className="h-3.5 w-3.5 text-rose-600" />
+                  <AlertOctagon className="h-3.5 w-3.5 text-rose-600" />
                   FROZEN
                 </>
               ) : (
                 <>
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                   ACTIVE
                 </>
               )}
@@ -265,12 +265,12 @@ export function AgentDetailPage() {
           >
             {isFrozen ? (
               <>
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                 <span>{togglingFreeze ? "Unfreezing..." : "Unfreeze Agent"}</span>
               </>
             ) : (
               <>
-                <ShieldAlert className="h-3.5 w-3.5 text-rose-600" />
+                <AlertOctagon className="h-3.5 w-3.5 text-rose-600" />
                 <span>{togglingFreeze ? "Freezing..." : "Freeze Agent"}</span>
               </>
             )}

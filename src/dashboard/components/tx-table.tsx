@@ -7,8 +7,6 @@ import { ReasonChip } from "@/dashboard/components/reason-chip";
 import { resourceLabel } from "@/dashboard/resource-label";
 import {
   Search,
-  ShieldCheck,
-  ShieldBan,
   Clock,
   ChevronRight,
   Bot,
@@ -22,7 +20,6 @@ import {
   TableHead,
   TableCell,
 } from "@/dashboard/components/ui/table";
-import { Badge } from "@/dashboard/components/ui/badge";
 import { Button } from "@/dashboard/components/ui/button";
 import { Input } from "@/dashboard/components/ui/input";
 
@@ -48,8 +45,6 @@ export function TxTable({
   const [search, setSearch] = useState("");
   const [selectedDecision, setSelectedDecision] = useState<string>("ALL");
   const [selectedTx, setSelectedTx] = useState<LiveDecisionItem | null>(null);
-  // Read once per mount rather than on every render: Date.now() during render is impure, and the
-  // "Nm ago" column only needs to be right as of the fetch that produced these rows.
   const [renderedAt] = useState(() => Date.now());
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -69,7 +64,7 @@ export function TxTable({
       const matchMerchant = t.merchant.toLowerCase().includes(q);
       const matchId = t.intentId?.toLowerCase().includes(q) || t.id?.toLowerCase().includes(q);
       const matchReason = t.reasons?.some(
-        (r) => r.code.toLowerCase().includes(q) || r.message.toLowerCase().includes(q)
+        (r) => r.code.toLowerCase().includes(q) || r.message.toLowerCase().includes(q),
       );
       const matchResource = t.resource?.toLowerCase().includes(q);
       const matchAgent = t.agentName?.toLowerCase().includes(q) || t.agentId.toLowerCase().includes(q);
@@ -83,10 +78,8 @@ export function TxTable({
 
   return (
     <>
-      <div className="bg-white rounded-[24px] border border-slate-200/90 shadow-xs overflow-hidden flex flex-col font-sans">
-        {/* Filters Bar */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col font-sans">
         <div className="p-4 sm:p-5 border-b border-slate-100 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Search Input */}
           <div className="relative flex-1 max-w-md">
             <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
@@ -101,9 +94,7 @@ export function TxTable({
             />
           </div>
 
-          {/* Filter Pills & Actions */}
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Decision Filter Tabs */}
             <div className="inline-flex rounded-xl border border-slate-200/80 bg-slate-50 p-1 text-xs font-semibold">
               {[
                 { id: "ALL", label: "All" },
@@ -112,12 +103,6 @@ export function TxTable({
                 { id: "BLOCK", label: "Blocked" },
               ].map((tab) => {
                 const isActive = selectedDecision === tab.id;
-                let activeStyle = "bg-white text-slate-900 shadow-xs font-bold";
-                if (isActive && tab.id === "BLOCK") activeStyle = "bg-rose-50 text-rose-700 shadow-xs border border-rose-200 font-bold";
-                if (isActive && tab.id === "ALLOW") activeStyle = "bg-emerald-50 text-emerald-700 shadow-xs border border-emerald-200 font-bold";
-                if (isActive && tab.id === "HOLD") activeStyle = "bg-amber-50 text-amber-700 shadow-xs border border-amber-200 font-bold";
-                if (isActive && tab.id === "ALL") activeStyle = "bg-blue-50 text-blue-700 shadow-xs border border-blue-200 font-bold";
-
                 return (
                   <button
                     key={tab.id}
@@ -127,7 +112,9 @@ export function TxTable({
                       setCurrentPage(1);
                     }}
                     className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                      isActive ? activeStyle : "text-slate-500 hover:text-slate-800"
+                      isActive
+                        ? "bg-white text-slate-900 shadow-xs font-bold border border-slate-200"
+                        : "text-slate-500 hover:text-slate-800"
                     }`}
                   >
                     {tab.label}
@@ -138,7 +125,6 @@ export function TxTable({
           </div>
         </div>
 
-        {/* Table View */}
         <Table>
           <TableHeader className="bg-slate-50/70 border-b border-slate-100">
             <TableRow>
@@ -188,76 +174,64 @@ export function TxTable({
                         handleRowClick(t);
                       }
                     }}
-                    className={`hover:bg-slate-50/80 active:bg-slate-100/70 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:bg-slate-50 transition-all cursor-pointer group select-none ${
-                      isBlock ? "hover:bg-rose-50/20" : isHold ? "hover:bg-amber-50/20" : "hover:bg-blue-50/20"
+                    className={`hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:bg-slate-50 transition-all cursor-pointer group select-none border-b border-gray-100 last:border-b-0 ${
+                      isBlock ? "border-l-2 border-l-red-500" : ""
                     }`}
                   >
-                    {/* Decision Status Pill */}
                     <TableCell className="py-3.5 px-5 whitespace-nowrap">
-                      <Badge
-                        variant={isAllow ? "success" : isBlock ? "destructive" : "warning"}
-                        className="gap-1.5 px-3 py-1 font-mono uppercase tracking-wide text-xs font-bold"
-                      >
-                        {isAllow ? (
-                          <>
-                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                            <span>ALLOWED</span>
-                          </>
-                        ) : isBlock ? (
-                          <>
-                            <ShieldBan className="h-3.5 w-3.5 text-rose-600" />
-                            <span>BLOCKED</span>
-                          </>
-                        ) : (
-                          <>
-                            <Clock className="h-3.5 w-3.5 text-amber-600" />
-                            <span>HELD</span>
-                          </>
-                        )}
-                      </Badge>
+                      {/* Ultra-minimalist status: SVG icon + tracking-widest uppercase text */}
+                      {isAllow ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-emerald-500 shrink-0">
+                            <polyline points="2.5,8.5 6.5,12.5 13.5,3.5" />
+                          </svg>
+                          <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Allowed</span>
+                        </span>
+                      ) : isBlock ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" className="h-3.5 w-3.5 text-red-500 shrink-0">
+                            <line x1="3" y1="3" x2="13" y2="13" /><line x1="13" y1="3" x2="3" y2="13" />
+                          </svg>
+                          <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Blocked</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5">
+                          <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 text-amber-400 shrink-0">
+                            <rect x="3" y="2" width="3.5" height="12" rx="1" />
+                            <rect x="9.5" y="2" width="3.5" height="12" rx="1" />
+                          </svg>
+                          <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Held</span>
+                        </span>
+                      )}
                     </TableCell>
 
-                    {/* Amount & Asset */}
                     <TableCell className="py-3.5 px-5 whitespace-nowrap">
-                      <div className="font-extrabold text-slate-900 text-sm font-sans">
-                        ${t.amountUsd}
-                      </div>
-                      <div className="text-[11px] font-mono text-slate-400 font-medium">
-                        USDC
-                      </div>
+                      <div className="font-extrabold text-slate-900 text-sm font-sans">${t.amountUsd}</div>
+                      <div className="text-[11px] font-mono text-slate-400 font-medium">USDC</div>
                     </TableCell>
 
-                    {/* Merchant & Resource */}
                     <TableCell className="py-3.5 px-5 max-w-[240px]">
                       <div className="font-bold text-slate-900 text-xs truncate" title={t.merchant}>
                         {t.merchant}
                       </div>
-                      <div className="text-[11px] text-slate-400 truncate mt-0.5">
-                        {resourceLabel(t.resource)}
-                      </div>
+                      <div className="text-[11px] text-slate-400 truncate mt-0.5">{resourceLabel(t.resource)}</div>
                     </TableCell>
 
-                    {/* Agent Badge */}
                     <TableCell className="py-3.5 px-5 whitespace-nowrap">
-                      <Badge
-                        variant="secondary"
-                        className="gap-1.5 px-2.5 py-1 text-xs font-semibold bg-slate-50 text-slate-700 border-slate-200"
-                      >
-                        <Bot className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                        <span>{t.agentName || t.agentId}</span>
-                      </Badge>
+                      {/* Bare agent name: Bot icon + plain text, no pill */}
+                      <span className="inline-flex items-center gap-1.5">
+                        <Bot className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                        <span className="text-xs text-gray-600 font-medium">{t.agentName || t.agentId}</span>
+                      </span>
                     </TableCell>
 
-                    {/* Reason / Rule */}
                     <TableCell className="py-3.5 px-5 max-w-[260px]">
                       {isAllow ? (
-                        <span className="text-[11px] text-emerald-600 font-mono font-medium">
-                          Policy Compliant
-                        </span>
+                        <span className="text-xs text-gray-500 font-mono">Policy compliant</span>
                       ) : primaryReason ? (
                         <ReasonChip code={primaryReason.code} message={primaryReason.message} />
                       ) : t.reason ? (
-                        <span className="text-xs text-rose-600 font-mono truncate block" title={t.reason}>
+                        <span className="text-xs text-gray-600 font-mono truncate block" title={t.reason}>
                           {t.reason}
                         </span>
                       ) : (
@@ -265,17 +239,13 @@ export function TxTable({
                       )}
                     </TableCell>
 
-                    {/* Time */}
                     <TableCell className="py-3.5 px-5 whitespace-nowrap">
                       <div className="font-medium text-slate-700 text-xs">
                         {new Date(t.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                       </div>
-                      <div className="text-[11px] text-slate-400 font-mono">
-                        {formatRelativeTime(t.createdAt, renderedAt)}
-                      </div>
+                      <div className="text-[11px] text-slate-400 font-mono">{formatRelativeTime(t.createdAt, renderedAt)}</div>
                     </TableCell>
 
-                    {/* Chevron Right */}
                     <TableCell className="py-3.5 px-5 text-right whitespace-nowrap">
                       <div className="h-7 w-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-slate-800 group-hover:bg-slate-200/80 transition-all ml-auto">
                         <ChevronRight className="h-4 w-4" />
@@ -288,16 +258,14 @@ export function TxTable({
           </TableBody>
         </Table>
 
-        {/* Footer Pagination & Counter */}
         <div className="p-4 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 px-5">
-          {/* Page Buttons */}
           <div className="flex items-center gap-1.5">
             <Button
               variant="outline"
               size="icon"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="h-8 w-8 rounded-lg border-slate-200 text-slate-600"
+              className="h-8 w-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -310,8 +278,8 @@ export function TxTable({
                 onClick={() => setCurrentPage(page)}
                 className={`h-8 w-8 rounded-lg text-xs font-semibold ${
                   currentPage === page
-                    ? "bg-blue-600 text-white font-bold"
-                    : "border-slate-200 text-slate-700"
+                    ? "bg-blue-600 text-white font-bold shadow-xs"
+                    : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
               >
                 {page}
@@ -325,7 +293,7 @@ export function TxTable({
                   variant="outline"
                   size="icon"
                   onClick={() => setCurrentPage(totalPages)}
-                  className="h-8 w-8 rounded-lg text-xs font-semibold border-slate-200 text-slate-700"
+                  className="h-8 w-8 rounded-lg text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer"
                 >
                   {totalPages}
                 </Button>
@@ -337,20 +305,18 @@ export function TxTable({
               size="icon"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="h-8 w-8 rounded-lg border-slate-200 text-slate-600"
+              className="h-8 w-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
 
-          {/* Counter */}
           <span className="font-medium text-slate-500">
             Showing {Math.min(filtered.length, (currentPage - 1) * pageSize + 1)}-{Math.min(filtered.length, currentPage * pageSize)} of {filtered.length}
           </span>
         </div>
       </div>
 
-      {/* Right-Side Transaction Detail Drawer */}
       <TxDetailDrawer
         tx={selectedTx}
         isOpen={isDrawerOpen}
@@ -359,4 +325,3 @@ export function TxTable({
     </>
   );
 }
-

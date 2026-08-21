@@ -10,7 +10,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   AlertCircle,
-  Shield,
+  Lock,
   Globe,
 } from "lucide-react";
 
@@ -410,7 +410,7 @@ export function PolicyForm({
               onClick={onSimulateClick}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-semibold rounded-lg transition-colors"
             >
-              <Shield className="h-3.5 w-3.5 text-blue-600" />
+              <Lock className="h-3.5 w-3.5 text-blue-600" />
               <span>Simulate Impact (What-If)</span>
             </button>
           )}

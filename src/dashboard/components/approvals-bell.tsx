@@ -28,10 +28,10 @@ export function ApprovalsBell() {
       title={`${live.length} payment(s) awaiting review${expired > 0 ? `, ${expired} expired` : ""}`}
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] font-bold transition-colors ${
         urgent
-          ? "animate-pulse border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+          ? "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
           : live.length > 0
           ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
-          : "border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100"
+          : "border-amber-200 bg-amber-50/60 text-amber-700 hover:bg-amber-100"
       }`}
     >
       {live.length > 0 ? (

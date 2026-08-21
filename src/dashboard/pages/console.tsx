@@ -13,8 +13,7 @@ import {
   Clock,
   Loader2,
   Play,
-  ShieldAlert,
-  ShieldCheck,
+  AlertOctagon,
   Square,
   Syringe,
   UserCheck,
@@ -92,10 +91,10 @@ const GUARD_KEYS: Record<string, string> = {
   BudgetBot: "gk_live_budgetbot_demo",
 };
 
-const OUTCOME_STYLES: Record<GuardOutcome, { chip: string; icon: typeof ShieldCheck; label: string }> = {
-  ALLOW: { chip: "bg-emerald-50 text-emerald-700 border-emerald-200", icon: ShieldCheck, label: "ALLOW" },
+const OUTCOME_STYLES: Record<GuardOutcome, { chip: string; icon: typeof CheckCircle2; label: string }> = {
+  ALLOW: { chip: "bg-emerald-50 text-emerald-700 border-emerald-200", icon: CheckCircle2, label: "ALLOW" },
   HOLD: { chip: "bg-amber-50 text-amber-700 border-amber-200", icon: Clock, label: "HOLD" },
-  BLOCK: { chip: "bg-red-50 text-red-700 border-red-200", icon: ShieldAlert, label: "BLOCK" },
+  BLOCK: { chip: "bg-red-50 text-red-700 border-red-200", icon: AlertOctagon, label: "BLOCK" },
 };
 
 export function ConsolePage() {
@@ -200,7 +199,7 @@ export function ConsolePage() {
       let closed = false;
 
       // NDJSON: one event per line. A chunk can split a line in half, so the tail is kept.
-      for (;;) {
+      for (; ;) {
         const { value, done } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
@@ -277,7 +276,7 @@ export function ConsolePage() {
       {/* Above-the-fold Live Enforcement Counters */}
       <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Stat label="Settled Spend" value={`$${spentUsd}`} tone="text-emerald-700" icon={<CircleDollarSign className="h-4 w-4" />} />
-        <Stat label="Money Refused" value={`$${blockedUsd}`} tone="text-red-700" icon={<ShieldAlert className="h-4 w-4" />} />
+        <Stat label="Money Refused" value={`$${blockedUsd}`} tone="text-red-700" icon={<AlertOctagon className="h-4 w-4" />} />
         <Stat label="Held in Review" value={`$${heldUsd}`} tone="text-amber-700" icon={<Clock className="h-4 w-4" />} />
         <Stat label="Decisions" value={`${settled} allow · ${held} hold · ${blocked} block`} tone="text-slate-700" icon={<CheckCircle2 className="h-4 w-4" />} />
       </dl>
@@ -420,7 +419,7 @@ export function ConsolePage() {
 
         <ColumnShell
           title="What the Guard decided"
-          icon={<ShieldCheck className="h-4 w-4 text-emerald-600" />}
+          icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
           empty={!running && calls.length === 0 ? "Every payment is evaluated before it is signed." : null}
         >
           {calls.map((call) => (
@@ -440,7 +439,7 @@ export function ConsolePage() {
           )}
           <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat label="Spent" value={`${spentUsd}`} tone="text-emerald-700" icon={<CircleDollarSign className="h-4 w-4" />} />
-            <Stat label="Blocked" value={`${blockedUsd}`} tone="text-red-700" icon={<ShieldAlert className="h-4 w-4" />} />
+            <Stat label="Blocked" value={`${blockedUsd}`} tone="text-red-700" icon={<AlertOctagon className="h-4 w-4" />} />
             <Stat label="Held" value={`${heldUsd}`} tone="text-amber-700" icon={<Clock className="h-4 w-4" />} />
             <Stat label="Decisions" value={`${settled} allow · ${held} hold · ${blocked} block`} tone="text-slate-700" icon={<CheckCircle2 className="h-4 w-4" />} />
           </dl>

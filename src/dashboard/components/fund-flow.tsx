@@ -147,6 +147,7 @@ export function FundFlow({
   const [balances, setBalances] = useState<BalancesResponse | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const loadBalances = useCallback(async () => {
     try {
@@ -194,10 +195,10 @@ export function FundFlow({
   const network = balances?.network;
 
   return (
-    <section className="rounded-[22px] border border-slate-200/90 bg-white shadow-xs overflow-hidden">
+    <section className="rounded-2xl border border-slate-200/90 bg-white shadow-xs overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5">
         <div>
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+          <h3 className="text-sm font-bold tracking-wide text-slate-900 flex items-center gap-2">
             <Wallet className="h-4 w-4 text-slate-500" />
             Fund flow
           </h3>
@@ -207,10 +208,19 @@ export function FundFlow({
         </div>
         <div className="flex items-center gap-3">
           {balances?.fetchedAt && (
-            <span className="hidden sm:inline font-mono text-[11px] text-slate-400">
+            <span className="hidden sm:inline font-mono text-xs text-slate-400">
               read {stamp(balances.fetchedAt).clock}
             </span>
           )}
+          <button
+            type="button"
+            onClick={() => setIsExpanded((v) => !v)}
+            aria-expanded={isExpanded}
+            aria-controls="fund-flow-content"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50"
+          >
+            {isExpanded ? "Hide details" : "Show details"}
+          </button>
           <button
             type="button"
             onClick={handleManualRefresh}
@@ -229,93 +239,104 @@ export function FundFlow({
         </p>
       )}
 
-      {/* Balances, with the flow between them */}
-      <div className="flex flex-wrap items-stretch gap-4 p-5">
-        {agent ? (
-          <WalletPanel wallet={agent} icon={<Bot className="h-4 w-4" />} />
-        ) : (
-          <div className="flex-1 min-w-[240px] h-40 rounded-2xl bg-slate-100 animate-pulse" />
-        )}
+      <div className="px-5 pb-4 pt-1">
+        <p className="text-xs text-slate-500">
+          <span className="font-semibold text-slate-700">${movedUsd}</span> settled across {transfers.length}{" "}
+          {transfers.length === 1 ? "transfer" : "transfers"}.
+        </p>
+      </div>
 
-        <div className="flex w-full flex-col items-center justify-center gap-1 sm:w-auto sm:min-w-[150px]">
-          <span className="font-mono text-lg font-extrabold text-emerald-600">${movedUsd}</span>
-          <div className="relative h-px w-full min-w-[110px] bg-gradient-to-r from-slate-200 via-emerald-400 to-slate-200">
-            <ArrowRight className="absolute -right-1 -top-2 h-4 w-4 text-emerald-500" />
+      {isExpanded && (
+        <div id="fund-flow-content">
+          {/* Balances, with the flow between them */}
+          <div className="flex flex-wrap items-stretch gap-4 px-5 pb-5">
+            {agent ? (
+              <WalletPanel wallet={agent} icon={<Bot className="h-4 w-4" />} />
+            ) : (
+              <div className="flex-1 min-w-[240px] h-40 rounded-2xl bg-slate-100 animate-pulse" />
+            )}
+
+            <div className="flex w-full flex-col items-center justify-center gap-1 sm:w-auto sm:min-w-[150px]">
+              <span className="font-mono text-lg font-extrabold text-emerald-600">${movedUsd}</span>
+              <div className="relative h-px w-full min-w-[110px] bg-gradient-to-r from-slate-200 via-emerald-400 to-slate-200">
+                <ArrowRight className="absolute -right-1 -top-2 h-4 w-4 text-emerald-500" />
+              </div>
+              <span className="font-mono text-xs text-slate-400">
+                {transfers.length} settled {transfers.length === 1 ? "transfer" : "transfers"}
+              </span>
+            </div>
+
+            {merchant ? (
+              <WalletPanel wallet={merchant} icon={<Store className="h-4 w-4" />} />
+            ) : (
+              <div className="flex-1 min-w-[240px] h-40 rounded-2xl bg-slate-100 animate-pulse" />
+            )}
           </div>
-          <span className="font-mono text-[11px] text-slate-400">
-            {transfers.length} settled {transfers.length === 1 ? "transfer" : "transfers"}
-          </span>
-        </div>
 
-        {merchant ? (
-          <WalletPanel wallet={merchant} icon={<Store className="h-4 w-4" />} />
-        ) : (
-          <div className="flex-1 min-w-[240px] h-40 rounded-2xl bg-slate-100 animate-pulse" />
-        )}
-      </div>
+          {/* Transfer ledger */}
+          <div className="border-t border-slate-100">
+            <div className="flex items-center justify-between px-5 py-3">
+              <span className="text-xs font-semibold tracking-wide text-slate-600">
+                Transfers
+              </span>
+              <span className="font-mono text-xs text-slate-400">newest first</span>
+            </div>
 
-      {/* Transfer ledger */}
-      <div className="border-t border-slate-100">
-        <div className="flex items-center justify-between px-5 py-3">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-            Transfers
-          </span>
-          <span className="font-mono text-[11px] text-slate-400">newest first</span>
-        </div>
+            <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
+              {loading ? (
+                [...Array(3)].map((_, i) => <div key={i} className="h-14 bg-slate-50 animate-pulse" />)
+              ) : transfers.length === 0 ? (
+                <p className="px-5 py-8 text-center text-sm text-slate-400">
+                  No settled transfers yet. Blocked and held payments never reach the chain, so they do
+                  not appear here.
+                </p>
+              ) : (
+                <div className="mx-auto max-w-4xl">
+                  {transfers.map((tx) => {
+                    const time = stamp(tx.settledAt ?? tx.createdAt);
+                    const url = explorerTxUrl(tx.network, tx.txHash);
+                    return (
+                      <div
+                        key={tx.intentId || tx.id}
+                        className="grid grid-cols-1 gap-2 px-5 py-3 hover:bg-slate-50/70 sm:grid-cols-[88px_minmax(0,1fr)_auto_auto] sm:items-center sm:gap-3"
+                      >
+                        <div className="font-mono text-xs leading-tight text-slate-500">
+                          <div className="font-semibold text-slate-700">{time.clock}</div>
+                          <div>{time.day}</div>
+                        </div>
 
-        <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
-          {loading ? (
-            [...Array(3)].map((_, i) => <div key={i} className="h-14 bg-slate-50 animate-pulse" />)
-          ) : transfers.length === 0 ? (
-            <p className="px-5 py-8 text-center text-sm text-slate-400">
-              No settled transfers yet. Blocked and held payments never reach the chain, so they do
-              not appear here.
-            </p>
-          ) : (
-            transfers.map((tx) => {
-              const time = stamp(tx.settledAt ?? tx.createdAt);
-              const url = explorerTxUrl(tx.network, tx.txHash);
-              return (
-                <div
-                  key={tx.intentId || tx.id}
-                  className="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-slate-50/70"
-                >
-                  <div className="w-24 shrink-0 font-mono text-[11px] leading-tight text-slate-500">
-                    <div className="font-semibold text-slate-700">{time.clock}</div>
-                    <div>{time.day}</div>
-                  </div>
+                        <div className="flex min-w-0 items-center gap-2 font-mono text-xs text-slate-500">
+                          <span className="truncate text-slate-700">{tx.agentName ?? tx.agentId}</span>
+                          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                          <span className="truncate" title={tx.recipient}>
+                            {tx.recipient ? shortAddress(tx.recipient) : tx.merchant}
+                          </span>
+                        </div>
 
-                  <div className="flex min-w-0 flex-1 items-center gap-2 font-mono text-[11px] text-slate-500">
-                    <span className="truncate text-slate-700">{tx.agentName ?? tx.agentId}</span>
-                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                    <span className="truncate" title={tx.recipient}>
-                      {tx.recipient ? shortAddress(tx.recipient) : tx.merchant}
-                    </span>
-                  </div>
+                        <span className="font-mono text-sm font-bold text-slate-900">${tx.amountUsd}</span>
 
-                  <span className="font-mono text-sm font-bold text-slate-900">${tx.amountUsd}</span>
-
-                  <span className="hidden font-mono text-[11px] text-slate-400 md:inline">{time.ago}</span>
-
-                  {url ? (
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-blue-600 hover:text-blue-700"
-                    >
-                      {explorerName(tx.network)}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  ) : (
-                    <span className="font-mono text-[11px] text-slate-300">no link</span>
-                  )}
+                        {url ? (
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`Open transfer ${tx.intentId || tx.id} on ${explorerName(tx.network)}`}
+                            className="inline-flex items-center justify-end text-blue-600 hover:text-blue-700"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        ) : (
+                          <span className="font-mono text-xs text-slate-300">no link</span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })
-          )}
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }

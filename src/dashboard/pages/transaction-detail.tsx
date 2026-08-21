@@ -14,8 +14,8 @@ import { explorerName, explorerTxUrl, networkLabel } from "@/shared/explorer";
 import {
   ArrowLeft,
   ExternalLink,
-  ShieldCheck,
-  ShieldBan,
+  CheckCircle2,
+  Ban,
   Clock,
   Copy,
   Check,
@@ -217,7 +217,7 @@ export function TransactionDetailPage() {
         <div className="bg-gradient-to-r from-rose-950 via-zinc-900 to-rose-950 border border-rose-800/80 rounded-xl p-6 text-white shadow-md">
           <div className="flex items-start gap-4">
             <div className="p-3 rounded-lg bg-rose-600/20 border border-rose-500/30 text-rose-400 shrink-0">
-              <ShieldBan className="h-7 w-7" />
+              <Ban className="h-7 w-7" />
             </div>
             <div className="space-y-2 flex-1">
               <div className="flex items-center gap-2">
@@ -246,7 +246,7 @@ export function TransactionDetailPage() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 shrink-0">
-                <ShieldCheck className="h-7 w-7" />
+                <CheckCircle2 className="h-7 w-7" />
               </div>
               <div>
                 <div className="flex items-center gap-2">

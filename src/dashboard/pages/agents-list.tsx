@@ -8,10 +8,9 @@ import { CreateAgentModal } from "@/dashboard/components/create-agent-modal";
 import { DecisionBar, type DecisionMixRow } from "@/dashboard/charts/decision-bar";
 import { BudgetBars, type BudgetBarRow } from "@/dashboard/charts/budget-bars";
 import type { TransactionRow } from "@/dashboard/hooks/useLiveDecisions";
-import { Bot, Coins, Plus, ShieldAlert, ShieldCheck, TrendingDown, Zap } from "lucide-react";
+import { Bot, Coins, Plus, AlertOctagon, CheckCircle2, TrendingDown, Zap } from "lucide-react";
 import { Card } from "@/dashboard/components/ui/card";
 import { Button } from "@/dashboard/components/ui/button";
-import { Alert, AlertDescription } from "@/dashboard/components/ui/alert";
 import { Progress } from "@/dashboard/components/ui/progress";
 
 interface AgentsApiResponse {
@@ -53,7 +52,7 @@ function Stat({
   icon: React.ReactNode;
 }) {
   return (
-    <Card className="rounded-[22px] p-5 shadow-xs transition-all hover:shadow-sm">
+    <Card className="rounded-2xl p-5 shadow-xs transition-all hover:shadow-sm">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
         {icon}
@@ -170,12 +169,12 @@ export function AgentsListPage() {
     <div className="space-y-8 font-sans">
       <div className="flex flex-wrap items-start gap-4">
         <div>
-          <h2 className="flex items-center gap-3 font-sans text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="flex items-center gap-3 font-sans text-3xl font-bold tracking-tight text-slate-900">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600">
               <Bot className="h-5 w-5" />
             </div>
             Autonomous agents
-          </h2>
+          </h1>
           <p className="mt-1 text-sm text-slate-500">
             Registered spenders, each with its own policy, budget windows and velocity limits.
             Everything below is read from the guard&apos;s records.
@@ -208,14 +207,14 @@ export function AgentsListPage() {
           value={loading ? "…" : String(activeCount)}
           hint="Operating within policy"
           tone="text-emerald-600"
-          icon={<ShieldCheck className="h-4 w-4 text-emerald-600" />}
+          icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
         />
         <Stat
           label="Frozen"
           value={loading ? "…" : String(frozenCount)}
           hint={frozenCount > 0 ? "Blocked before any rule runs" : "None frozen"}
           tone="text-rose-600"
-          icon={<ShieldAlert className="h-4 w-4 text-rose-600" />}
+          icon={<AlertOctagon className="h-4 w-4 text-rose-600" />}
         />
         <Stat
           label="Spent (30d)"
@@ -232,16 +231,17 @@ export function AgentsListPage() {
       </div>
 
       {error && (
-        <Alert variant="destructive" className="p-4">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div className="flex items-start gap-3 p-5 rounded-xl border border-gray-200 bg-white shadow-xs border-l-4 border-l-red-500">
+          <AlertOctagon className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+          <p className="text-sm text-gray-700">{error}</p>
+        </div>
       )}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {loading
           ? [...Array(2)].map((_, i) => (
-              <div key={i} className="h-64 animate-pulse rounded-[22px] bg-slate-100" />
-            ))
+            <div key={i} className="h-64 animate-pulse rounded-2xl bg-slate-100" />
+          ))
           : agents.map((agent) => <AgentCard key={agent.id} agent={agent} onStatusChange={load} />)}
       </div>
 
@@ -252,18 +252,18 @@ export function AgentsListPage() {
       {/* Velocity headroom — the other ceiling the engine enforces, and the one no chart showed */}
       {velocity.length > 0 && (
         <Card className="p-5 shadow-sm">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-900">
+          <h3 className="text-sm font-bold tracking-wide text-zinc-900">
             Velocity headroom (last hour)
           </h3>
-          <p className="mt-0.5 text-xs text-zinc-400">
+          <p className="mt-0.5 text-xs text-slate-500">
             Payments in the trailing hour against each agent&apos;s <code>maxTxPerHour</code>.
           </p>
-          <ul className="mt-4 space-y-3">
+          <ul className="mt-4 space-y-3 max-w-3xl">
             {velocity.map((row) => {
               const percent = Math.min(100, Math.round((row.lastHour / row.maxPerHour) * 100));
               return (
                 <li key={row.name} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="grid grid-cols-1 gap-1 text-xs sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-3">
                     <span className="flex items-center gap-1.5 font-medium text-zinc-700">
                       <Zap className="h-3.5 w-3.5 text-zinc-400" />
                       {row.name}

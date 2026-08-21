@@ -9,7 +9,11 @@ import { toMinor } from "@/shared/money";
 import { ALGORAND_TESTNET_NETWORK_ID, ALGORAND_TESTNET_USDC_ASA } from "@/shared/env";
 import type { PolicyRules } from "@/shared/types";
 
-const SANDBOX = "localhost:3000";
+// The merchant key is whatever host the wire carries — src/payments/intent/build.ts uses url.host.
+// Hardcoding localhost:3000 seeds a deployment whose only allowed merchant is a host it can never
+// see, and unknownMerchantAction is BLOCK, so every payment on Vercel would be refused as
+// MERCHANT_NOT_ALLOWED. Seed against the URL the app will actually answer on.
+const SANDBOX = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").host;
 // Algorand ids are base32 over A-Z2-7 — 58 characters for an address, 52 for a transaction id.
 // These are deterministic stand-ins with the right alphabet and length, not real encodings, so
 // every shape check behaves exactly as it does against the chain.

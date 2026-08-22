@@ -47,7 +47,7 @@ type RunEvent =
   | { type: "thinking"; step: number; text: string }
   | { type: "injection"; snippet: string }
   | { type: "tool-call"; seq: number; tool: string; priceUsd: string; args: unknown }
-  | { type: "tool-result"; seq: number; tool: string; priceUsd: string; outcome: GuardOutcome; code?: string; txHash?: string; explorerUrl?: string; intentId?: string }
+  | { type: "tool-result"; seq: number; tool: string; priceUsd: string; outcome: GuardOutcome; code?: string; txHash?: string; explorerUrl?: string; intentId?: string; data?: unknown }
   | { type: "done"; answer: string; spentUsd: string; blockedUsd: string; heldUsd: string; steps: number; toolCalls: number; settledCount: number }
   | { type: "error"; message: string };
 
@@ -70,6 +70,8 @@ interface CallRow {
   intentId?: string;
   approvedAt?: string;
   network?: string;
+  /** Exactly what the payment bought, so a figure in the report can be checked against its source. */
+  data?: unknown;
 }
 
 interface Thought {
@@ -140,7 +142,7 @@ export function ConsolePage() {
         setCalls((prev) =>
           prev.map((row) =>
             row.seq === event.seq
-              ? { ...row, outcome: event.outcome, code: event.code, txHash: event.txHash, explorerUrl: event.explorerUrl, intentId: event.intentId }
+              ? { ...row, outcome: event.outcome, code: event.code, txHash: event.txHash, explorerUrl: event.explorerUrl, intentId: event.intentId, data: event.data }
               : row,
           ),
         );
@@ -508,6 +510,19 @@ function GuardRow({ call, onApprove, approving }: { call: CallRow; onApprove: (i
         <a href={href} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block font-mono text-xs underline underline-offset-2">
           settled · view on {explorerName("algorand:testnet")} ↗
         </a>
+      )}
+
+      {/* The whole point of paying: every figure in the report can be checked against the bytes the
+          payment actually bought, instead of being taken on the model's word. */}
+      {call.outcome === "ALLOW" && call.data !== undefined && (
+        <details className="mt-2 group">
+          <summary className="cursor-pointer text-xs font-semibold underline underline-offset-2 opacity-80 hover:opacity-100 marker:content-['']">
+            what ${call.priceUsd} bought ▾
+          </summary>
+          <pre className="mt-1.5 max-h-64 overflow-auto rounded-md bg-white/70 p-2 text-[11px] leading-relaxed text-slate-700 ring-1 ring-inset ring-slate-200 whitespace-pre-wrap break-words">
+            {JSON.stringify(call.data, null, 2)}
+          </pre>
+        </details>
       )}
 
       {call.outcome === "BLOCK" && <p className="mt-1 text-xs opacity-80">Nothing was signed. No transaction exists.</p>}

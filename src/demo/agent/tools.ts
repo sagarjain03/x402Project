@@ -25,6 +25,15 @@ export interface ToolCallRecord {
   explorerUrl?: string;
   /** Present when the Guard held the payment — the id an operator approves. */
   intentId?: string;
+  /**
+   * Exactly what the payment bought — the merchant's body, nothing else. Shown next to the report
+   * so a reader can check every figure in it against the data it was derived from, rather than
+   * taking the model's word for where a number came from.
+   *
+   * Safe to surface: gw-request already strips the merchant's headers and the raw facilitator
+   * payload server-side, so this is the response body and never a key or a settlement envelope.
+   */
+  data?: unknown;
 }
 
 /** Called the moment the model commits to a tool, before the Guard has decided anything. */
@@ -102,6 +111,7 @@ export async function callPaidTool(
   onCall?.({
     tool: name, priceUsd, status: "PAID",
     txHash: result.txHash, explorerUrl: result.explorerUrl, intentId: result.intentId,
+    data: result.data,
   });
 
   if (options?.onInjection) {

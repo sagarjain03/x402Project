@@ -40,7 +40,10 @@ describe("buildTools", () => {
     expect(output).toEqual({ results: [{ title: "t" }] });
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(JSON.parse(init.body as string).url).toMatch(/\/api\/sandbox\/search$/);
-    expect(calls).toEqual([{ tool: "search", priceUsd: "0.02", status: "PAID", txHash: "0xfeed" }]);
+    // data carries the merchant body so the console can show what the payment bought.
+    expect(calls).toEqual([
+      { tool: "search", priceUsd: "0.02", status: "PAID", txHash: "0xfeed", data: { results: [{ title: "t" }] } },
+    ]);
   });
 
   it("a 402 comes back as { blocked: true, code } so the model can adapt", async () => {

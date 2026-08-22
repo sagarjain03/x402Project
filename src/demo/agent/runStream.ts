@@ -55,7 +55,7 @@ export type RunEvent =
   | { type: "thinking"; step: number; text: string }
   | { type: "injection"; snippet: string }
   | { type: "tool-call"; seq: number; tool: ToolName; priceUsd: string; args: unknown }
-  | { type: "tool-result"; seq: number; tool: ToolName; priceUsd: string; outcome: GuardOutcome; code?: string; txHash?: string; explorerUrl?: string; intentId?: string }
+  | { type: "tool-result"; seq: number; tool: ToolName; priceUsd: string; outcome: GuardOutcome; code?: string; txHash?: string; explorerUrl?: string; intentId?: string; data?: unknown }
   | { type: "done"; answer: string; spentUsd: string; blockedUsd: string; heldUsd: string; steps: number; toolCalls: number; settledCount: number }
   | { type: "error"; message: string };
 
@@ -276,6 +276,7 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
       txHash: record.txHash,
       explorerUrl: record.explorerUrl,
       intentId: record.intentId,
+      data: record.data,
     });
   };
 

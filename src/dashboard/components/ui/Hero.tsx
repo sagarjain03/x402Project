@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { CloudShader } from "./cloud-shader";
+import { WardenIllustration } from "./warden-illustration";
 
 export type HeroProps = {
   title?: string;
@@ -61,13 +62,9 @@ export function Hero({
         </div>
 
         <div className="flex-1 w-full max-w-lg lg:max-w-xl flex justify-center lg:justify-end">
-          <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-slate-900/40 backdrop-blur-md border border-white/30 shadow-2xl shadow-slate-950/40 animate-float transition-all duration-500 ease-out hover:scale-[1.02] hover:border-white/50">
-            <img
-              src="/warden-agent-image.jpeg"
-              alt="An autonomous agent offers a payment while Warden approves and blocks requests."
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 pointer-events-none rounded-3xl ring-1 ring-inset ring-white/20" />
+          <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/20 shadow-2xl shadow-slate-950/40 animate-float transition-all duration-500 ease-out hover:scale-[1.02] hover:border-white/35 flex items-center justify-center p-6">
+            <WardenIllustration className="w-full max-w-xl h-auto" />
+            <div className="absolute inset-0 pointer-events-none rounded-3xl ring-1 ring-inset ring-white/15" />
           </div>
         </div>
       </div>

@@ -163,6 +163,7 @@ async function writeReport(
   task: string,
   notes: string[],
   purchases: string[],
+  evidence: string[],
   truncated: boolean,
   signal?: AbortSignal,
 ): Promise<string> {
@@ -179,7 +180,8 @@ async function writeReport(
     ? "\n\n_The run reached its time budget, so this is written from what the agent had gathered by then._"
     : "";
 
-  if (!recent.trim()) {
+  // Evidence alone is enough to write from; notes alone are not, but they still carry the intent.
+  if (!recent.trim() && !evidence.length) {
     return `The agent finished without reporting anything. What it paid for:\n${bought}`;
   }
 
@@ -189,14 +191,22 @@ async function writeReport(
     const result = await generateText({
       model: groq("openai/gpt-oss-120b"),
       system:
-        "Write the closing report for a research run, from the working notes given. Use exactly " +
-        "these markdown headings:\n" +
-        "**Answer** — one or two sentences, leading with the figure.\n" +
-        "**How it was verified** — which tools were called and what each returned.\n" +
+        "Write the closing report for a research run.\n\n" +
+        "GROUNDING — every figure, name, date and source in your report must appear in the TOOL " +
+        "RESPONSES below. They are the only things that were actually purchased. Never name a " +
+        "source that is not in them: no IEA, no BloombergNEF, no 'industry reports'. If the tool " +
+        "responses do not answer the task, say exactly that. The working notes are the agent's own " +
+        "thinking, not evidence — use them for intent only, never as a source of fact.\n\n" +
+        "Use exactly these markdown headings:\n" +
+        "**Answer** — one or two sentences, leading with the figure, and only if a tool returned it.\n" +
+        "**How it was verified** — name each tool and quote the figure it returned.\n" +
         "**Not verified** — anything unconfirmed, including any tool the Guard refused.\n" +
         "Prose for a human reader. Never output JSON, tool-call syntax or planning notes. Do not " +
         "apologise and do not mention notes, budgets or being interrupted. Under 200 words.",
-      prompt: `Task: ${task}\n\nTools purchased:\n${bought}\n\nWorking notes:\n${recent}`,
+      prompt:
+        `Task: ${task}\n\nTools purchased:\n${bought}\n\n` +
+        `TOOL RESPONSES — the only permitted source of fact:\n${evidence.join("\n\n") || "(nothing was returned)"}\n\n` +
+        `Working notes (intent only, not evidence):\n${recent}`,
       temperature: 0,
       // This model routinely answers entirely in reasoningText and leaves text empty. Reading only
       // text is what made a finished report look like a failed one and fall back to a raw note.
@@ -266,6 +276,11 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
     const outcome = outcomeOf(record);
     tally(totals, record, outcome);
     purchases.push(`${record.tool} $${record.priceUsd} — ${outcome}${record.code ? ` (${record.code})` : ""}`);
+    // The closing report is written from this, not from the agent's notes. Notes are what the model
+    // thought; this is what the money actually bought, and it is the only thing the report may cite.
+    if (record.data !== undefined) {
+      evidence.push(`${record.tool} returned:\n${JSON.stringify(record.data).slice(0, 2_000)}`);
+    }
     emit({
       type: "tool-result",
       seq: pending.get(record.tool)?.shift() ?? seq,
@@ -304,6 +319,7 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
   // phase is cut short, so the report is built from the run rather than invented after it.
   const notes: string[] = [];
   const purchases: string[] = [];
+  const evidence: string[] = [];
 
   try {
     if (driver === "scripted") {
@@ -362,13 +378,13 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
     // Only the final step's text is a conclusion. An earlier step's text is mid-run chatter and
     // arrives with the tool-call JSON trailing it, which is what used to be printed as the answer.
     const answer = text?.trim()
-      || (await writeReport(task, notes.length ? notes : [lastText || lastReasoning], purchases, false, input.signal));
+      || (await writeReport(task, notes.length ? notes : [lastText || lastReasoning], purchases, evidence, false, input.signal));
     finish(answer, steps.length);
   } catch (error) {
     // Running out of time is a bounded run, not a fault: every payment already made is real and
     // already counted, so it closes with a `done` and no error banner.
     if (ranOutOfTime()) {
-      finish(await writeReport(task, notes, purchases, true, input.signal), totals.calls);
+      finish(await writeReport(task, notes, purchases, evidence, true, input.signal), totals.calls);
       return;
     }
     const message = error instanceof Error ? error.message : String(error);

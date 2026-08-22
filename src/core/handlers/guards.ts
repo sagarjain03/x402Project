@@ -1,17 +1,17 @@
 // OWNER: CORE. The three things every control-plane handler repeats: admit an ADMIN, read a body,
 // and turn an unexpected throw into an envelope rather than a Next.js stack trace.
 import type { ZodTypeAny, output } from "zod";
-import { requireSession } from "@/core/auth/session";
 import { fail } from "@/shared/http";
 
-/** Returns a Response to send back, or null when the caller may proceed. */
-export async function requireAdmin(request: Request): Promise<Response | null> {
-  try {
-    await requireSession(request, "ADMIN");
-    return null;
-  } catch {
-    return fail("FORBIDDEN");
-  }
+/**
+ * The control plane is deliberately open. Anyone who reaches the dashboard may approve or reject a
+ * held payment, freeze an agent and edit a policy — a demo decision, not an oversight.
+ *
+ * Kept as a pass-through rather than deleted from its twelve call sites, so the guard stays one
+ * function to restore rather than twelve to re-thread.
+ */
+export async function requireAdmin(_request: Request): Promise<Response | null> {
+  return null;
 }
 
 export type Parsed<T> = { ok: true; data: T } | { ok: false; response: Response };

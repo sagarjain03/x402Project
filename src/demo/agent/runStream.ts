@@ -147,19 +147,22 @@ async function writeReport(
   task: string,
   notes: string[],
   purchases: string[],
+  truncated: boolean,
   signal?: AbortSignal,
 ): Promise<string> {
   const recent = notes.slice(-8).join("\n");
   const bought = purchases.length ? purchases.join("\n") : "nothing was purchased";
-  const truncatedNote = "\n\n_The run reached its time budget, so this is written from what the agent had gathered by then._";
+  const truncatedNote = truncated
+    ? "\n\n_The run reached its time budget, so this is written from what the agent had gathered by then._"
+    : "";
 
   if (!recent.trim()) {
-    return `The run reached its time budget before the agent reported anything. What it paid for:\n${bought}`;
+    return `The agent finished without reporting anything. What it paid for:\n${bought}`;
   }
 
   try {
     const reserve = AbortSignal.timeout(Math.max(4_000, WRAPUP_BUDGET_MS - 2_000));
-    const { text } = await generateText({
+    const result = await generateText({
       model: groq("openai/gpt-oss-120b"),
       system:
         "You are closing out a research run that ran out of time. Write the best answer you can " +
@@ -168,15 +171,30 @@ async function writeReport(
         "budgets or being interrupted. Under 200 words.",
       prompt: `Task: ${task}\n\nTools purchased:\n${bought}\n\nWorking notes:\n${recent}`,
       temperature: 0,
+      // This model routinely answers entirely in reasoningText and leaves text empty. Reading only
+      // text is what made a finished report look like a failed one and fall back to a raw note.
+      providerOptions: { groq: { reasoningFormat: "parsed" } },
       abortSignal: signal ? AbortSignal.any([signal, reserve]) : reserve,
     });
-    const report = text?.trim();
+    const report = (result.text?.trim() || readStepText(result).reasoning).trim();
     if (report) return report + truncatedNote;
   } catch {
-    // Fall through to the agent's own words below.
+    // Fall through to the deterministic summary below.
   }
 
-  return `${notes[notes.length - 1]}${truncatedNote}`;
+  // No model output. The agent's last note is an internal thought rather than an answer, so it is
+  // labelled as one instead of being presented as the report.
+  return [
+    truncated
+      ? `The run reached its time budget before the agent wrote its conclusion.`
+      : `The agent stopped without writing a conclusion.`,
+    ``,
+    `**What it paid for**`,
+    bought,
+    ``,
+    `**Where it had got to**`,
+    notes[notes.length - 1],
+  ].join("\n");
 }
 
 /**
@@ -307,15 +325,19 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
       },
     });
 
-    const answer = (text?.trim() || lastText).trim()
-      || (lastReasoning ? `The model stopped without writing a conclusion. Its last note: ${lastReasoning}` : "")
-      || "The model stopped without writing a conclusion.";
+    // A run that ends on a tool call leaves no closing prose, and this model often answers entirely
+    // in reasoning. Printing that raw put an internal thought — sometimes with a JSON fragment
+    // trailing it — where the answer belongs, so it gets written up the same way a truncated run is.
+    // Only the final step's text is a conclusion. An earlier step's text is mid-run chatter and
+    // arrives with the tool-call JSON trailing it, which is what used to be printed as the answer.
+    const answer = text?.trim()
+      || (await writeReport(task, notes.length ? notes : [lastText || lastReasoning], purchases, false, input.signal));
     finish(answer, steps.length);
   } catch (error) {
     // Running out of time is a bounded run, not a fault: every payment already made is real and
     // already counted, so it closes with a `done` and no error banner.
     if (ranOutOfTime()) {
-      finish(await writeReport(task, notes, purchases, input.signal), totals.calls);
+      finish(await writeReport(task, notes, purchases, true, input.signal), totals.calls);
       return;
     }
     const message = error instanceof Error ? error.message : String(error);

@@ -137,6 +137,22 @@ function tally(totals: Totals, record: ToolCallRecord, outcome: GuardOutcome): v
 }
 
 /**
+ * The report, wherever the model happened to put it. This model answers in `text` most of the time
+ * and in `reasoningText` the rest, so reading only one of them turns a written report into a
+ * fallback — which is exactly what it did on the deployment while working locally.
+ *
+ * Reasoning is the scratchpad, so it is cleaned rather than trusted: brace-delimited tool-call
+ * fragments come out, and what is left has to be long enough to be prose rather than a stray note.
+ */
+function usableProse(result: unknown): string {
+  const text = (result as { text?: unknown })?.text;
+  if (typeof text === "string" && text.trim()) return text.trim();
+
+  const reasoning = readStepText(result).reasoning.replace(/\{[\s\S]*?\}/g, " ").replace(/[ \t]+/g, " ").trim();
+  return reasoning.length >= 120 ? reasoning : "";
+}
+
+/**
  * The closing report for a run whose tool phase was cut short. No tools are passed, so this call
  * cannot buy anything — it only turns the notes the agent already paid for into an answer.
  *
@@ -186,13 +202,9 @@ async function writeReport(
       providerOptions: { groq: { reasoningFormat: "parsed" } },
       abortSignal: signal ? AbortSignal.any([signal, reserve]) : reserve,
     });
-    // reasoningText is this model's scratchpad, not its answer. It is only worth printing when the
-    // model put its prose there instead of in text — planning, which is what it usually contains,
-    // gives itself away with tool-call braces.
-    const reasoning = readStepText(result).reasoning;
-    const usableReasoning = reasoning.includes("{") ? "" : reasoning;
-    const report = (result.text?.trim() || usableReasoning).trim();
+    const report = usableProse(result);
     if (report) return report + truncatedNote;
+    console.warn("[writeReport] model returned no usable prose; falling back to the purchase list");
   } catch {
     // Fall through to the deterministic summary below.
   }

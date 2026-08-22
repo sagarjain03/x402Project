@@ -183,6 +183,7 @@ async function writeReport(
     return `The agent finished without reporting anything. What it paid for:\n${bought}`;
   }
 
+  let failure = "unknown";
   try {
     const reserve = AbortSignal.timeout(Math.max(4_000, WRAPUP_BUDGET_MS - 2_000));
     const result = await generateText({
@@ -204,9 +205,11 @@ async function writeReport(
     });
     const report = usableProse(result);
     if (report) return report + truncatedNote;
-    console.warn("[writeReport] model returned no usable prose; falling back to the purchase list");
-  } catch {
-    // Fall through to the deterministic summary below.
+    failure = "the model returned no usable prose";
+    console.warn("[writeReport] no usable prose; falling back to the purchase list");
+  } catch (error) {
+    failure = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    console.warn(`[writeReport] ${failure}`);
   }
 
   // No model output. The agent's last note is an internal thought rather than an answer, so it is

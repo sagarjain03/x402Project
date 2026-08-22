@@ -6,7 +6,7 @@ import { apiGet } from "@/dashboard/api-client/client";
 import { API } from "@/dashboard/api-client/endpoints";
 import { Hero } from "@/dashboard/components/ui/Hero";
 import { CloudShader } from "@/dashboard/components/ui/cloud-shader";
-import { DecisionFeed } from "@/dashboard/components/decision-feed";
+
 import { ErrorCard } from "@/dashboard/components/error-card";
 import {
   DollarSign,
@@ -208,24 +208,24 @@ export function OverviewPage() {
           id="overview-section"
           className="relative z-20 -mt-6 px-3 sm:px-6 lg:px-8 pb-28 max-w-[1400px] w-full mx-auto"
         >
-          <div className="bg-white/95 backdrop-blur-2xl rounded-3xl border border-slate-200/80 shadow-2xl p-6 sm:p-10 space-y-8 min-h-[700px]">
+          <div className="bg-white/10 backdrop-blur-2xl rounded-3xl border border-white/15 shadow-2xl p-6 sm:p-10 space-y-8 min-h-[700px]">
             {/* Top Bar inside Card (Title + Subtitle, No buttons) */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-100 gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-white/15 gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[11px] font-extrabold uppercase tracking-widest text-blue-600">
+                  <span className="text-[11px] font-extrabold uppercase tracking-widest text-blue-300">
                     System Enforcement Telemetry
                   </span>
                 </div>
-                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-sans">
+                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-sans">
                   Overview
                 </h2>
-                <p className="text-sm font-medium text-slate-500 mt-1">
+                <p className="text-sm font-medium text-slate-300 mt-1">
                   Real-time policy guard decisions, intercepted spend, and verification metrics.
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-xs font-semibold font-mono text-slate-500 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-xl self-start sm:self-auto shadow-2xs">
+              <div className="flex items-center gap-2 text-xs font-semibold font-mono text-slate-300 bg-white/10 border border-white/15 px-3.5 py-2 rounded-xl self-start sm:self-auto">
                 <span>Window: 30 Days (720h)</span>
               </div>
             </div>
@@ -263,24 +263,24 @@ export function OverviewPage() {
                 {/* ========================================================================= */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                   {/* 1. Spend Today */}
-                  <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 p-5 hover:bg-white/15 transition-all flex flex-col justify-between relative overflow-hidden group">
                     <div className="space-y-3">
                       {/* Header Eyebrow + Icon */}
                       <div className="flex items-center gap-2.5">
                         <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
                           <DollarSign className="h-4 w-4" />
                         </div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
                           Spend Settled
                         </span>
                       </div>
 
                       {/* Number */}
                       <div>
-                        <div className="text-3xl sm:text-[34px] font-extrabold text-slate-900 tracking-tight font-sans">
+                        <div className="text-3xl sm:text-[34px] font-extrabold text-white tracking-tight font-sans">
                           ${metrics?.spentUsd ?? "0.00"}
                         </div>
-                        <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                        <p className="text-xs text-slate-300 mt-1 flex items-center gap-1">
                           <span className="text-emerald-600 font-bold">
                             {metrics?.onChainTxCount ?? 0} payments
                           </span>{" "}
@@ -324,21 +324,21 @@ export function OverviewPage() {
                   </div>
 
                   {/* 3. Blocked On-Chain Count */}
-                  <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 p-5 hover:bg-white/15 transition-all flex flex-col justify-between relative overflow-hidden group">
                     <div className="space-y-3">
                       {/* Header Eyebrow + Icon */}
                       <div className="flex items-center gap-2.5">
                         <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                           <CheckCircle2 className="h-4 w-4" />
                         </div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
                           Blocked, Yet On-Chain
                         </span>
                       </div>
 
                       {/* Number */}
                       <div>
-                        <div className="text-3xl sm:text-[34px] font-extrabold text-slate-900 tracking-tight font-sans">
+                        <div className="text-3xl sm:text-[34px] font-extrabold text-white tracking-tight font-sans">
                           {metrics?.blockedOnChainTxCount ?? 0}
                         </div>
                         <p className="text-xs text-emerald-600 font-semibold mt-1">
@@ -349,26 +349,26 @@ export function OverviewPage() {
                   </div>
 
                   {/* 4. Engine Latency (P95) */}
-                  <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between relative overflow-hidden group">
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 p-5 hover:bg-white/15 transition-all flex flex-col justify-between relative overflow-hidden group">
                     <div className="space-y-3">
                       {/* Header Eyebrow + Icon */}
                       <div className="flex items-center gap-2.5">
                         <div className="h-7 w-7 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center">
                           <Zap className="h-4 w-4" />
                         </div>
-                        <span className="text-xs font-semibold tracking-wide text-slate-600">
+                        <span className="text-xs font-semibold tracking-wide text-slate-300">
                           Engine Latency (P95)
                         </span>
                       </div>
 
                       {/* Number */}
                       <div>
-                        <div className="text-3xl sm:text-[34px] font-extrabold text-slate-900 tracking-tight font-sans">
+                        <div className="text-3xl sm:text-[34px] font-extrabold text-white tracking-tight font-sans">
                           {metrics?.p95GuardLatencyMs !== undefined && metrics?.p95GuardLatencyMs !== null
                             ? `${metrics.p95GuardLatencyMs} ms`
                             : "—"}
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">
+                        <p className="text-xs text-slate-300 mt-1">
                           P95 end-to-end evaluation latency
                         </p>
                       </div>
@@ -381,13 +381,13 @@ export function OverviewPage() {
                 {/* ========================================================================= */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Left: Decision Distribution Card with Donut Chart */}
-                  <div className="bg-white rounded-2xl border border-slate-200/90 p-7 shadow-xs space-y-6 flex flex-col justify-between">
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 p-7 space-y-6 flex flex-col justify-between">
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-xs text-slate-900 uppercase tracking-wider font-sans">
+                      <h3 className="font-bold text-xs text-white uppercase tracking-wider font-sans">
                         Decision Distribution ({metrics ? Math.round(metrics.windowHours / 24) : "—"}D)
                       </h3>
-                      <span className="text-xs font-semibold text-slate-500">
+                      <span className="text-xs font-semibold text-slate-300">
                         Total: {totalDecisions}
                       </span>
                     </div>
@@ -409,15 +409,15 @@ export function OverviewPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-                              <span className="font-semibold text-slate-800">
+                              <span className="font-semibold text-slate-100">
                                 ALLOW (Settled)
                               </span>
                             </div>
-                            <span className="font-bold text-slate-900 font-mono">
+                            <span className="font-bold text-white font-mono">
                               {allow} ({allowPct}%)
                             </span>
                           </div>
-                          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                          <div className="w-full bg-white/15 rounded-full h-2 overflow-hidden">
                             <div
                               className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
                               style={{ width: `${allowPct}%` }}
@@ -430,15 +430,15 @@ export function OverviewPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />
-                              <span className="font-semibold text-slate-800">
+                              <span className="font-semibold text-slate-100">
                                 HOLD (Review Required)
                               </span>
                             </div>
-                            <span className="font-bold text-slate-900 font-mono">
+                            <span className="font-bold text-white font-mono">
                               {hold} ({holdPct}%)
                             </span>
                           </div>
-                          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                          <div className="w-full bg-white/15 rounded-full h-2 overflow-hidden">
                             <div
                               className="bg-amber-500 h-2 rounded-full transition-all duration-500"
                               style={{ width: `${holdPct}%` }}
@@ -451,15 +451,15 @@ export function OverviewPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
-                              <span className="font-semibold text-slate-800">
+                              <span className="font-semibold text-slate-100">
                                 BLOCK (Intercepted)
                               </span>
                             </div>
-                            <span className="font-bold text-slate-900 font-mono">
+                            <span className="font-bold text-white font-mono">
                               {block} ({blockPct}%)
                             </span>
                           </div>
-                          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                          <div className="w-full bg-white/15 rounded-full h-2 overflow-hidden">
                             <div
                               className="bg-rose-500 h-2 rounded-full transition-all duration-500"
                               style={{ width: `${blockPct}%` }}
@@ -471,19 +471,19 @@ export function OverviewPage() {
                   </div>
 
                   {/* Right: Top Blocked Rules Card */}
-                  <div className="bg-white rounded-2xl border border-slate-200/90 p-7 shadow-xs space-y-4 flex flex-col justify-between">
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 p-7 space-y-4 flex flex-col justify-between">
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-xs text-slate-900 uppercase tracking-wider font-sans">
+                      <h3 className="font-bold text-xs text-white uppercase tracking-wider font-sans">
                         Top Blocked Rules ({metrics ? Math.round(metrics.windowHours / 24) : "—"}D)
                       </h3>
-                      <span className="text-xs text-slate-500">Ranked by frequency</span>
+                      <span className="text-xs text-slate-300">Ranked by frequency</span>
                     </div>
 
                     {/* Rule Rows 1..6 */}
                     {displayBlockReasons.length === 0 ? (
-                      <div className="flex-1 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-center flex items-center justify-center">
-                        <p className="text-sm text-slate-600" role="status" aria-live="polite">
+                      <div className="flex-1 rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-center flex items-center justify-center">
+                        <p className="text-sm text-slate-300" role="status" aria-live="polite">
                           No rules blocked in the last {metrics?.windowHours ?? 24} hours.
                         </p>
                       </div>
@@ -492,17 +492,17 @@ export function OverviewPage() {
                         {displayBlockReasons.slice(0, 6).map((item, idx) => (
                           <div
                             key={item.code}
-                            className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 text-xs hover:bg-slate-100/80 transition-colors"
+                            className="flex items-center justify-between p-2.5 rounded-xl bg-white/8 border border-white/12 text-xs hover:bg-white/15 transition-colors"
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <span className="w-6 h-6 rounded-full bg-slate-200/80 text-slate-700 font-mono text-[11px] flex items-center justify-center font-bold shrink-0">
+                              <span className="w-6 h-6 rounded-full bg-white/15 text-slate-200 font-mono text-[11px] flex items-center justify-center font-bold shrink-0">
                                 {idx + 1}
                               </span>
                               <div className="min-w-0">
-                                <span className="font-semibold text-slate-900 block truncate">
+                                <span className="font-semibold text-slate-100 block truncate">
                                   {HUMAN_REASONS[item.code] || item.code}
                                 </span>
-                                <span className="font-mono text-[10px] text-slate-500 truncate block">
+                                <span className="font-mono text-[10px] text-slate-400 truncate block">
                                   {item.code}
                                 </span>
                               </div>
@@ -518,10 +518,7 @@ export function OverviewPage() {
                   </div>
                 </div>
 
-                {/* Real-time Decision Feed via SSE */}
-                <div className="pt-2">
-                  <DecisionFeed />
-                </div>
+
               </>
             )}
           </div>

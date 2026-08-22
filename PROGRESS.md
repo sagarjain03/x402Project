@@ -1,14 +1,14 @@
-# ASPG — project progress log
+# WARDEN
 
-**Agent Spend Policy Guard** · ACTS EDC **Brainwave 2026** · Problem Statement Set-2, **PS-1**
+**WARDEN** · ACTS EDC **Brainwave 2026** · Problem Statement Set-2, **PS-1**
 Branded **WARDEN** in the UI.
 
-> ASPG evaluates every autonomous agent payment against configurable financial, merchant, velocity,
+> WARDEN evaluates every autonomous agent payment against configurable financial, merchant, velocity,
 > network and risk policies **before** the payment payload is signed or settled — auto-approving
 > low-risk payments, blocking violations, escalating ambiguous ones for human review, and keeping a
 > complete audit trail.
 
-**Last updated:** 2026-08-19 · **Branch:** `pay/algorand-migration` · **Working tree:** clean
+**Last updated:** 2026-08-22 · **Branch:** `main` · **Working tree:** clean
 
 | Commits | Source files | API routes | Dashboard pages | Tests | Lint | Typecheck |
 |---|---|---|---|---|---|---|

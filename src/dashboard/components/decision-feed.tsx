@@ -25,14 +25,14 @@ export function DecisionFeed({
 
   if (loading && decisions.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-zinc-200 p-6 shadow-sm">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-4 mb-4">
-          <div className="h-5 bg-zinc-200 rounded w-1/3 animate-pulse" />
-          <div className="h-4 bg-zinc-200 rounded w-16 animate-pulse" />
+      <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/15 p-6">
+        <div className="flex items-center justify-between border-b border-white/15 pb-4 mb-4">
+          <div className="h-5 bg-white/15 rounded w-1/3 animate-pulse" />
+          <div className="h-4 bg-white/15 rounded w-16 animate-pulse" />
         </div>
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-16 bg-zinc-100 rounded-lg animate-pulse" />
+            <div key={i} className="h-16 bg-white/10 rounded-lg animate-pulse" />
           ))}
         </div>
       </div>
@@ -40,24 +40,24 @@ export function DecisionFeed({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden flex flex-col">
+    <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/15 overflow-hidden flex flex-col">
       {/* Header with Live Status */}
-      <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+      <div className="p-5 border-b border-white/15 flex items-center justify-between bg-white/5">
         <div>
-          <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
+          <h3 className="text-base font-bold text-white flex items-center gap-2">
             Live Decision Stream
-            <span className="text-xs font-normal text-zinc-500 font-mono">
+            <span className="text-xs font-normal text-slate-300 font-mono">
               ({decisions.length} total)
             </span>
           </h3>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-slate-300 mt-0.5">
             Real-time pre-flight policy evaluations across all active agent wallets.
           </p>
         </div>
 
         {/* Rule 2: Connected status — dot indicator, no pill background */}
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-200">
             <span
               className={`h-2 w-2 rounded-full shrink-0 ${
                 isConnected ? "bg-emerald-500 animate-pulse" : "bg-amber-400"
@@ -69,9 +69,9 @@ export function DecisionFeed({
       </div>
 
       {/* Decision List */}
-      <div className="divide-y divide-zinc-100 overflow-y-auto max-h-[600px]">
+      <div className="divide-y divide-white/10 overflow-y-auto max-h-[600px]">
         {displayedDecisions.length === 0 ? (
-          <div className="p-8 text-center text-zinc-500 text-sm">
+          <div className="p-8 text-center text-slate-300 text-sm">
             No decisions logged yet. Run a simulator scenario or trigger an agent payment.
           </div>
         ) : (
@@ -92,7 +92,7 @@ function DecisionRow({ item }: { item: LiveDecisionItem }) {
   const primaryReason = item.reasons?.[0];
 
   return (
-    <div className={`pl-4 pr-4 pt-4 pb-4 transition-colors hover:bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 last:border-b-0 ${
+    <div className={`pl-4 pr-4 pt-4 pb-4 transition-colors hover:bg-white/8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 last:border-b-0 ${
       isBlock ? "border-l-2 border-l-red-500" : "border-l-2 border-l-transparent"
     }`}>
       {/* Left: Badge, Agent, Merchant, Amount */}
@@ -101,26 +101,26 @@ function DecisionRow({ item }: { item: LiveDecisionItem }) {
 
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-sm text-zinc-900 font-mono">
+            <span className="font-semibold text-sm text-white font-mono">
               ${item.amountUsd}
             </span>
-            <span className="text-xs text-zinc-400">to</span>
-            <span className="text-sm font-medium text-zinc-700 truncate max-w-[200px]" title={item.merchant}>
+            <span className="text-xs text-slate-300">to</span>
+            <span className="text-sm font-medium text-slate-200 truncate max-w-[200px]" title={item.merchant}>
               {item.merchant}
             </span>
             {item.agentName && (
-              <span className="text-[11px] font-mono text-gray-400">
+              <span className="text-[11px] font-mono text-slate-400">
                 {item.agentName}
               </span>
             )}
           </div>
 
-          <div className="text-xs text-zinc-400 mt-1 flex items-center gap-2">
+          <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
             <span>{new Date(item.createdAt).toLocaleTimeString()}</span>
             {item.resource && (
               <>
                 <span>•</span>
-                <span className="truncate max-w-[220px] text-zinc-500">
+                <span className="truncate max-w-[220px] text-slate-300">
                   {resourceLabel(item.resource)}
                 </span>
               </>
@@ -137,7 +137,7 @@ function DecisionRow({ item }: { item: LiveDecisionItem }) {
             href={explorerTxUrl(item.network, item.txHash)!}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-mono text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs font-mono text-slate-400 hover:text-white transition-colors cursor-pointer"
           >
             <span>{item.txHash.slice(0, 8)}...{item.txHash.slice(-6)}</span>
             <ExternalLink className="h-3 w-3 shrink-0" />
@@ -146,8 +146,8 @@ function DecisionRow({ item }: { item: LiveDecisionItem }) {
 
         {/* Rule 2: HOLD — clock icon + neutral text, no amber pill */}
         {isHold && (
-          <div className="inline-flex items-center gap-1.5 text-xs text-gray-500">
-            <Clock className="h-3.5 w-3.5 text-gray-400" />
+          <div className="inline-flex items-center gap-1.5 text-xs text-slate-300">
+            <Clock className="h-3.5 w-3.5 text-slate-400" />
             <span className="font-medium">
               {item.approvalExpiresAt
                 ? `Expires ${new Date(item.approvalExpiresAt).toLocaleTimeString()}`

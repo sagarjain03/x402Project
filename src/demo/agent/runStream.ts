@@ -21,6 +21,17 @@ import { toMinor, toUsd } from "@/shared/money";
 export const MAX_STEPS = 25;
 export const DEFAULT_BUDGET_USD = "1.00";
 
+/**
+ * A step budget is not a time budget. Each settled payment costs roughly 12 s on a deployment —
+ * the 402 round trip plus waiting for the Algorand block — so 25 steps can outlive the serverless
+ * function that is streaming them. When the platform kills the function the stream just stops: no
+ * `done`, no `error`, and the page sits on "evaluating…" forever with the totals wrong.
+ *
+ * So the run stops itself first and still emits a `done` describing what happened. Keep this under
+ * the function's maxDuration in vercel.json, with room for the closing events to flush.
+ */
+const RUN_BUDGET_MS = Number(process.env.CONSOLE_RUN_BUDGET_MS ?? 50_000);
+
 export const DEFAULT_TASK =
   "Find the current global EV battery recycling capacity. Verify the headline figure once, then " +
   "write a short summary. Buy the premium report only if you judge it essential.";
@@ -183,6 +194,10 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
     });
   };
 
+  // Declared out here so the catch can tell "we stopped ourselves" from a genuine failure.
+  const deadline = AbortSignal.timeout(RUN_BUDGET_MS);
+  const ranOutOfTime = () => deadline.aborted;
+
   try {
     if (driver === "scripted") {
       await runScripted(input, onStart, onCall, emit, onInjection);
@@ -205,6 +220,10 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
     // answer and is not labelled as one, but an empty panel reads as a crash when the run was fine.
     let lastReasoning = "";
 
+    // AbortSignal.any so a client that navigates away still cancels immediately, rather than the
+    // run continuing to spend until the time budget elapses.
+    const runSignal = input.signal ? AbortSignal.any([input.signal, deadline]) : deadline;
+
     const { text, steps } = await generateText({
       model: groq("openai/gpt-oss-120b"),
       system: SYSTEM_PROMPT,
@@ -217,7 +236,7 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
       providerOptions: { groq: { reasoningFormat: "parsed" } },
       // onStepEnd, not the deprecated onStepFinish alias. It fires after the step's tools have
       // already been executed, so this narrates what the model said, never a prediction of it.
-      abortSignal: input.signal,
+      abortSignal: runSignal,
       onStepEnd: (step) => {
         const said = readStepText(step);
         if (said.text) lastText = said.text;
@@ -232,6 +251,16 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
       || "The model stopped without writing a conclusion.";
     finish(answer, steps.length);
   } catch (error) {
+    // Running out of time is a bounded run, not a fault: every payment already made is real and
+    // already counted, so it closes with a `done` and no error banner.
+    if (ranOutOfTime()) {
+      finish(
+        `The agent was still working when the run hit its ${Math.round(RUN_BUDGET_MS / 1000)}s time budget. ` +
+          `Every payment listed above was evaluated and settled for real; the answer is just unfinished.`,
+        totals.calls,
+      );
+      return;
+    }
     const message = error instanceof Error ? error.message : String(error);
     emit({ type: "error", message });
     // Then close the run anyway. Every payment above this line already happened.

@@ -32,6 +32,15 @@ export const DEFAULT_BUDGET_USD = "1.00";
  */
 const RUN_BUDGET_MS = Number(process.env.CONSOLE_RUN_BUDGET_MS ?? 50_000);
 
+/**
+ * Held back from the budget so a truncated run can still write its report. Cutting the agent off
+ * mid-tool and printing "the answer is unfinished" wastes work the agent already paid for: it has
+ * read three search results by then and has plenty to say. This reserve buys one final model call
+ * with no tools — nothing left to pay for, so it cannot spend — that turns those notes into an
+ * answer. Only the tool phase gets `RUN_BUDGET_MS - WRAPUP_BUDGET_MS`.
+ */
+const WRAPUP_BUDGET_MS = Number(process.env.CONSOLE_WRAPUP_BUDGET_MS ?? 12_000);
+
 export const DEFAULT_TASK =
   "Find the current global EV battery recycling capacity. Verify the headline figure once, then " +
   "write a short summary. Buy the premium report only if you judge it essential.";
@@ -128,6 +137,49 @@ function tally(totals: Totals, record: ToolCallRecord, outcome: GuardOutcome): v
 }
 
 /**
+ * The closing report for a run whose tool phase was cut short. No tools are passed, so this call
+ * cannot buy anything — it only turns the notes the agent already paid for into an answer.
+ *
+ * Never throws. If the model is unreachable or the reserve also elapses, the agent's own last note
+ * is the report; that is still the run's real output, just less tidy.
+ */
+async function writeReport(
+  task: string,
+  notes: string[],
+  purchases: string[],
+  signal?: AbortSignal,
+): Promise<string> {
+  const recent = notes.slice(-8).join("\n");
+  const bought = purchases.length ? purchases.join("\n") : "nothing was purchased";
+  const truncatedNote = "\n\n_The run reached its time budget, so this is written from what the agent had gathered by then._";
+
+  if (!recent.trim()) {
+    return `The run reached its time budget before the agent reported anything. What it paid for:\n${bought}`;
+  }
+
+  try {
+    const reserve = AbortSignal.timeout(Math.max(4_000, WRAPUP_BUDGET_MS - 2_000));
+    const { text } = await generateText({
+      model: groq("openai/gpt-oss-120b"),
+      system:
+        "You are closing out a research run that ran out of time. Write the best answer you can " +
+        "from the working notes given. Answer the task directly, state the figure you settled on, " +
+        "and say plainly what you could not verify. Do not apologise and do not mention notes, " +
+        "budgets or being interrupted. Under 200 words.",
+      prompt: `Task: ${task}\n\nTools purchased:\n${bought}\n\nWorking notes:\n${recent}`,
+      temperature: 0,
+      abortSignal: signal ? AbortSignal.any([signal, reserve]) : reserve,
+    });
+    const report = text?.trim();
+    if (report) return report + truncatedNote;
+  } catch {
+    // Fall through to the agent's own words below.
+  }
+
+  return `${notes[notes.length - 1]}${truncatedNote}`;
+}
+
+/**
  * Runs one agent task and emits every step. Never throws: a failure is an `error` event, because
  * the caller is a stream that still has to close cleanly and a page that still has to say why.
  */
@@ -165,6 +217,7 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
   const onCall = (record: ToolCallRecord) => {
     const outcome = outcomeOf(record);
     tally(totals, record, outcome);
+    purchases.push(`${record.tool} $${record.priceUsd} — ${outcome}${record.code ? ` (${record.code})` : ""}`);
     emit({
       type: "tool-result",
       seq: pending.get(record.tool)?.shift() ?? seq,
@@ -195,8 +248,13 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
   };
 
   // Declared out here so the catch can tell "we stopped ourselves" from a genuine failure.
-  const deadline = AbortSignal.timeout(RUN_BUDGET_MS);
+  const deadline = AbortSignal.timeout(Math.max(5_000, RUN_BUDGET_MS - WRAPUP_BUDGET_MS));
   const ranOutOfTime = () => deadline.aborted;
+
+  // What the agent said as it worked, and what it bought. Both feed the wrap-up when the tool
+  // phase is cut short, so the report is built from the run rather than invented after it.
+  const notes: string[] = [];
+  const purchases: string[] = [];
 
   try {
     if (driver === "scripted") {
@@ -242,7 +300,10 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
         if (said.text) lastText = said.text;
         if (said.reasoning) lastReasoning = said.reasoning;
         const shown = said.reasoning || said.text;
-        if (shown) emit({ type: "thinking", step: said.stepNumber, text: shown });
+        if (shown) {
+          notes.push(shown);
+          emit({ type: "thinking", step: said.stepNumber, text: shown });
+        }
       },
     });
 
@@ -254,11 +315,7 @@ export async function runAgentStream(input: RunInput, emit: Emit): Promise<void>
     // Running out of time is a bounded run, not a fault: every payment already made is real and
     // already counted, so it closes with a `done` and no error banner.
     if (ranOutOfTime()) {
-      finish(
-        `The agent was still working when the run hit its ${Math.round(RUN_BUDGET_MS / 1000)}s time budget. ` +
-          `Every payment listed above was evaluated and settled for real; the answer is just unfinished.`,
-        totals.calls,
-      );
+      finish(await writeReport(task, notes, purchases, input.signal), totals.calls);
       return;
     }
     const message = error instanceof Error ? error.message : String(error);

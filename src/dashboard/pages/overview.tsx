@@ -185,16 +185,16 @@ export function OverviewPage() {
   const displayBlockReasons = metrics?.topBlockReasons ?? [];
 
   return (
-    <div className="relative w-full min-h-screen selection:bg-blue-600 selection:text-white bg-gradient-to-b from-[#1d64c2] via-[#488de8] to-[#7fb5f7] overflow-x-hidden">
+    <div className="relative w-full min-h-screen selection:bg-blue-600 selection:text-white bg-slate-950 overflow-x-hidden">
       {/* Whole-Page Fixed CloudShader Animated Sky Background */}
       <div className="fixed inset-0 w-full h-full pointer-events-none z-0">
         <CloudShader
-          className="w-full h-full"
-          speed={0.7}
+          className="w-full h-full opacity-60"
+          speed={0.65}
           count={6}
-          cloudColor="#ffffff"
-          skyTopColor="#1d64c2"
-          skyBottomColor="#7fb5f7"
+          cloudColor="#38bdf8"
+          skyTopColor="#090d16"
+          skyBottomColor="#1e293b"
         />
       </div>
 
@@ -208,15 +208,26 @@ export function OverviewPage() {
           id="overview-section"
           className="relative z-20 -mt-6 px-3 sm:px-6 lg:px-8 pb-28 max-w-[1400px] w-full mx-auto"
         >
-          <div className="bg-white/95 backdrop-blur-xl rounded-3xl border border-white/80 shadow-2xl p-6 sm:p-10 space-y-8 min-h-[700px]">
+          <div className="bg-white/95 backdrop-blur-2xl rounded-3xl border border-slate-200/80 shadow-2xl p-6 sm:p-10 space-y-8 min-h-[700px]">
             {/* Top Bar inside Card (Title + Subtitle, No buttons) */}
-            <div className="pb-2">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-sans">
-                Overview
-              </h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Policy guard decisions and on-chain prevention metrics over the last 30 days.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-100 gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px] font-extrabold uppercase tracking-widest text-blue-600">
+                    System Enforcement Telemetry
+                  </span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-sans">
+                  Overview
+                </h2>
+                <p className="text-sm font-medium text-slate-500 mt-1">
+                  Real-time policy guard decisions, intercepted spend, and verification metrics.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-semibold font-mono text-slate-500 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-xl self-start sm:self-auto shadow-2xs">
+                <span>Window: 30 Days (720h)</span>
+              </div>
             </div>
 
             {loading ? (

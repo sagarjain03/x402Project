@@ -150,7 +150,14 @@ async function writeReport(
   truncated: boolean,
   signal?: AbortSignal,
 ): Promise<string> {
-  const recent = notes.slice(-8).join("\n");
+  // The notes are raw chain of thought and carry tool-call JSON inside them. Fed back verbatim they
+  // teach the model to answer in the same shape, which is how a planning fragment ended up printed
+  // as the report. Strip anything brace-delimited before it becomes an example to imitate.
+  const recent = notes
+    .slice(-8)
+    .map((n) => n.replace(/\{[\s\S]*?\}/g, " ").replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .join("\n");
   const bought = purchases.length ? purchases.join("\n") : "nothing was purchased";
   const truncatedNote = truncated
     ? "\n\n_The run reached its time budget, so this is written from what the agent had gathered by then._"
@@ -165,10 +172,13 @@ async function writeReport(
     const result = await generateText({
       model: groq("openai/gpt-oss-120b"),
       system:
-        "You are closing out a research run that ran out of time. Write the best answer you can " +
-        "from the working notes given. Answer the task directly, state the figure you settled on, " +
-        "and say plainly what you could not verify. Do not apologise and do not mention notes, " +
-        "budgets or being interrupted. Under 200 words.",
+        "Write the closing report for a research run, from the working notes given. Use exactly " +
+        "these markdown headings:\n" +
+        "**Answer** — one or two sentences, leading with the figure.\n" +
+        "**How it was verified** — which tools were called and what each returned.\n" +
+        "**Not verified** — anything unconfirmed, including any tool the Guard refused.\n" +
+        "Prose for a human reader. Never output JSON, tool-call syntax or planning notes. Do not " +
+        "apologise and do not mention notes, budgets or being interrupted. Under 200 words.",
       prompt: `Task: ${task}\n\nTools purchased:\n${bought}\n\nWorking notes:\n${recent}`,
       temperature: 0,
       // This model routinely answers entirely in reasoningText and leaves text empty. Reading only
@@ -176,7 +186,12 @@ async function writeReport(
       providerOptions: { groq: { reasoningFormat: "parsed" } },
       abortSignal: signal ? AbortSignal.any([signal, reserve]) : reserve,
     });
-    const report = (result.text?.trim() || readStepText(result).reasoning).trim();
+    // reasoningText is this model's scratchpad, not its answer. It is only worth printing when the
+    // model put its prose there instead of in text — planning, which is what it usually contains,
+    // gives itself away with tool-call braces.
+    const reasoning = readStepText(result).reasoning;
+    const usableReasoning = reasoning.includes("{") ? "" : reasoning;
+    const report = (result.text?.trim() || usableReasoning).trim();
     if (report) return report + truncatedNote;
   } catch {
     // Fall through to the deterministic summary below.
